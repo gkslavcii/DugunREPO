@@ -78,7 +78,7 @@ export default function ParallaxCouple({
           alt={alt}
           draggable={false}
           onError={() => setImgError(true)}
-          className="relative h-[42vh] max-h-[460px] w-auto select-none object-contain drop-shadow-2xl [transform-style:preserve-3d] sm:h-[50vh]"
+          className="relative max-h-[46vh] w-auto max-w-[88vw] select-none object-contain drop-shadow-2xl [transform-style:preserve-3d] sm:max-h-[56vh]"
         />
       ) : (
         <div className="flex h-[42vh] max-h-[460px] w-[78vw] max-w-[330px] flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-dusk-deep/40 bg-white/50 px-6 text-center sm:h-[50vh]">
