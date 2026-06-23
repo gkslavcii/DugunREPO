@@ -1,9 +1,26 @@
 import Link from "next/link";
 import AndacForm from "@/components/AndacForm";
 import { siteConfig } from "@/config/site";
+import { getSupabaseAdmin } from "@/lib/supabase";
 
-export default function AndacPage() {
+export const dynamic = "force-dynamic";
+
+type PublicNote = { id: string; content: string; name: string | null };
+
+export default async function AndacPage() {
   const { coupleNames } = siteConfig;
+
+  const sb = getSupabaseAdmin();
+  let publicNotes: PublicNote[] = [];
+  if (sb) {
+    const { data } = await sb
+      .from("notes")
+      .select("id, content, name")
+      .eq("is_public", true)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    publicNotes = (data as PublicNote[]) ?? [];
+  }
 
   return (
     <main className="relative flex min-h-dvh flex-col items-center px-6 py-16 sm:py-20">
@@ -24,14 +41,44 @@ export default function AndacPage() {
 
       <p className="mb-9 max-w-md text-center leading-relaxed text-ink-soft">
         Bize bir not, bir dilek ya da güzel bir anı bırakın. Notunuzu yalnızca
-        biz göreceğiz.
+        biz göreceğiz — dilersen herkese açık da paylaşabilirsin.
       </p>
 
       <AndacForm />
 
+      {publicNotes.length > 0 && (
+        <section className="mt-16 w-full max-w-lg">
+          <div className="mb-7 flex flex-col items-center">
+            <h2 className="font-display text-3xl text-ink">
+              Paylaşılan Andaçlar
+            </h2>
+            <div className="mt-3 flex items-center gap-3">
+              <span className="h-px w-8 bg-line" />
+              <span className="h-1.5 w-1.5 rotate-45 bg-dusk-deep/50" />
+              <span className="h-px w-8 bg-line" />
+            </div>
+          </div>
+          <ul className="flex flex-col gap-4">
+            {publicNotes.map((n) => (
+              <li
+                key={n.id}
+                className="rounded-2xl border border-line bg-white/50 p-5 shadow-sm"
+              >
+                <p className="whitespace-pre-wrap leading-relaxed text-ink">
+                  {n.content}
+                </p>
+                <p className="mt-3 font-display text-lg text-dusk-deep">
+                  — {n.name || "İsimsiz misafir"}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <Link
         href="/"
-        className="mt-10 text-sm text-ink-soft underline-offset-4 transition hover:text-ink hover:underline"
+        className="mt-12 text-sm text-ink-soft underline-offset-4 transition hover:text-ink hover:underline"
       >
         ← Ana sayfa
       </Link>

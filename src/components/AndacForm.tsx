@@ -69,6 +69,18 @@ export default function AndacForm() {
         />
       </div>
 
+      <label className="flex cursor-pointer items-start gap-2.5 text-sm text-ink-soft">
+        <input
+          type="checkbox"
+          name="is_public"
+          className="mt-0.5 h-4 w-4 accent-dusk-deep"
+        />
+        <span>
+          Bu notu <span className="font-medium text-ink">herkese açık</span>{" "}
+          yayınla (Andaç sayfasında diğer misafirler de görebilsin)
+        </span>
+      </label>
+
       {/* bot tuzağı — gerçek kullanıcı görmez */}
       <input
         type="text"

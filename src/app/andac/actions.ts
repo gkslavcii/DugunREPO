@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { getSupabaseAdmin } from "@/lib/supabase";
 
 export type AndacState = { ok: boolean; message: string } | null;
@@ -11,6 +12,7 @@ export async function submitAndac(
   const content = String(formData.get("content") ?? "").trim();
   const name = String(formData.get("name") ?? "").trim();
   const honeypot = String(formData.get("website") ?? "").trim();
+  const isPublic = formData.get("is_public") === "on";
 
   // Bot tuzağı: gizli alan doluysa sessizce "başarılı" dön.
   if (honeypot) return { ok: true, message: "Teşekkürler!" };
@@ -29,7 +31,7 @@ export async function submitAndac(
 
   const { error } = await supabase
     .from("notes")
-    .insert({ content, name: name || null });
+    .insert({ content, name: name || null, is_public: isPublic });
 
   if (error)
     return {
@@ -37,5 +39,6 @@ export async function submitAndac(
       message: "Bir şeyler ters gitti, tekrar dener misiniz?",
     };
 
+  revalidatePath("/andac");
   return { ok: true, message: "Notunuz bize ulaştı, çok teşekkür ederiz! 💛" };
 }

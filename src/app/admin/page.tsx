@@ -12,6 +12,7 @@ type Note = {
   content: string;
   name: string | null;
   created_at: string;
+  is_public: boolean;
 };
 
 export default async function AdminPage() {
@@ -24,7 +25,7 @@ export default async function AdminPage() {
   if (sb) {
     const { data } = await sb
       .from("notes")
-      .select("id, content, name, created_at")
+      .select("id, content, name, created_at, is_public")
       .order("created_at", { ascending: false });
     notes = (data as Note[]) ?? [];
   }
@@ -69,12 +70,16 @@ export default async function AdminPage() {
                 {n.content}
               </p>
               <div className="mt-4 flex items-center justify-between gap-3 border-t border-line/70 pt-3 text-xs text-ink-soft">
-                <span>
+                <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
                   <span className="font-medium text-ink">
                     {n.name || "İsimsiz misafir"}
                   </span>
-                  {" · "}
-                  {fmt.format(new Date(n.created_at))}
+                  <span>· {fmt.format(new Date(n.created_at))}</span>
+                  {n.is_public && (
+                    <span className="rounded-full bg-sage/25 px-2 py-0.5 text-[10px] font-medium text-[#5f6e46]">
+                      herkese açık
+                    </span>
+                  )}
                 </span>
                 <DeleteNoteButton id={n.id} />
               </div>
