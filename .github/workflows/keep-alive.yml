@@ -1,0 +1,15 @@
+name: keep-alive
+
+# Supabase ucretsiz projesi 7 gun hareketsiz kalinca uykuya dalar.
+# Bu is, siteyi 3 gunde bir durterek projeyi uyanik tutar.
+on:
+  schedule:
+    - cron: "0 6 */3 * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping site
+        run: curl -fsS https://sezin-goksel-wedding.vercel.app/api/ping

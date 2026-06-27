@@ -18,6 +18,7 @@ const mulish = Mulish({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://sezin-goksel-wedding.vercel.app"),
   title: "Sezin & Göksel",
   description:
     "Düğünümüze hoş geldiniz — bu güzel günü birlikte ölümsüzleştirelim.",

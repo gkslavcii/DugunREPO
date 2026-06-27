@@ -1,11 +1,15 @@
 import Link from "next/link";
 import { siteConfig } from "@/config/site";
+import { getMode } from "@/lib/settings";
 import ParallaxCouple from "@/components/ParallaxCouple";
 import FloatingLeaves from "@/components/FloatingLeaves";
 import { Monogram, Sprig } from "@/components/ornaments";
 
-export default function Home() {
-  const { coupleNames, mode, events, coupleImage } = siteConfig;
+export const revalidate = 60;
+
+export default async function Home() {
+  const { coupleNames, events, coupleImage } = siteConfig;
+  const mode = await getMode();
   const ev = events[mode];
 
   return (

@@ -5,7 +5,12 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
-type PublicNote = { id: string; content: string; name: string | null };
+type PublicNote = {
+  id: string;
+  content: string;
+  name: string | null;
+  created_at: string;
+};
 
 export default async function AndacPage() {
   const { coupleNames } = siteConfig;
@@ -15,12 +20,14 @@ export default async function AndacPage() {
   if (sb) {
     const { data } = await sb
       .from("notes")
-      .select("id, content, name")
+      .select("id, content, name, created_at")
       .eq("is_public", true)
       .order("created_at", { ascending: false })
       .limit(50);
     publicNotes = (data as PublicNote[]) ?? [];
   }
+
+  const fmt = new Intl.DateTimeFormat("tr-TR", { dateStyle: "long" });
 
   return (
     <main className="relative flex min-h-dvh flex-col items-center px-6 py-16 sm:py-20">
@@ -69,6 +76,9 @@ export default async function AndacPage() {
                 </p>
                 <p className="mt-3 font-display text-lg text-dusk-deep">
                   — {n.name || "İsimsiz misafir"}
+                </p>
+                <p className="mt-0.5 text-xs text-ink-soft/70">
+                  {fmt.format(new Date(n.created_at))}
                 </p>
               </li>
             ))}

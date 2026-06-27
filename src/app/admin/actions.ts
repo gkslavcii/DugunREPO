@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { signIn, signOut, isAdmin } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { setMode } from "@/lib/settings";
+import type { EventMode } from "@/config/site";
 
 export type LoginState = { error: string } | null;
 
@@ -29,4 +31,14 @@ export async function deleteNoteAction(formData: FormData) {
   const sb = getSupabaseAdmin();
   if (sb) await sb.from("notes").delete().eq("id", id);
   revalidatePath("/admin");
+}
+
+export async function setModeAction(formData: FormData) {
+  if (!(await isAdmin())) return;
+  const mode = String(formData.get("mode") ?? "");
+  if (mode === "kina" || mode === "dugun") {
+    await setMode(mode as EventMode);
+    revalidatePath("/");
+    revalidatePath("/admin");
+  }
 }

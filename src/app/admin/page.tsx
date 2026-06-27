@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { isAdmin, adminConfigured } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { getMode } from "@/lib/settings";
 import AdminLogin from "@/components/AdminLogin";
 import DeleteNoteButton from "@/components/DeleteNoteButton";
-import { logoutAction } from "./actions";
+import { logoutAction, setModeAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,7 @@ export default async function AdminPage() {
       .order("created_at", { ascending: false });
     notes = (data as Note[]) ?? [];
   }
+  const mode = await getMode();
 
   const fmt = new Intl.DateTimeFormat("tr-TR", {
     dateStyle: "long",
@@ -42,7 +44,7 @@ export default async function AdminPage() {
           <p className="text-xs uppercase tracking-[0.3em] text-ink-soft">
             Yönetim
           </p>
-          <h1 className="font-display text-4xl text-ink">Andaç Notları</h1>
+          <h1 className="font-display text-4xl text-ink">Yönetim Paneli</h1>
         </div>
         <form action={logoutAction}>
           <button className="rounded-full border border-ink/15 px-4 py-2 text-xs text-ink-soft transition hover:bg-ink/[0.04]">
@@ -51,6 +53,27 @@ export default async function AdminPage() {
         </form>
       </div>
 
+      {/* Anasayfa modu anahtarı */}
+      <section className="mb-8 flex items-center justify-between gap-4 rounded-2xl border border-line bg-white/60 p-5">
+        <div>
+          <p className="text-sm text-ink-soft">Anasayfa modu</p>
+          <p className="font-display text-2xl text-ink">
+            {mode === "kina" ? "Kına Gecesi" : "Düğün"}
+          </p>
+        </div>
+        <form action={setModeAction}>
+          <input
+            type="hidden"
+            name="mode"
+            value={mode === "kina" ? "dugun" : "kina"}
+          />
+          <button className="rounded-full bg-dusk-deep px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90">
+            {mode === "kina" ? "Düğün moduna geç" : "Kına moduna geç"}
+          </button>
+        </form>
+      </section>
+
+      <h2 className="mb-3 font-display text-2xl text-ink">Andaç Notları</h2>
       <p className="mb-6 text-sm text-ink-soft">
         Toplam <span className="font-semibold text-ink">{notes.length}</span> not
       </p>
