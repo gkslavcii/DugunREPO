@@ -4,7 +4,7 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 import { isAdmin } from "@/lib/auth";
 import { isR2Configured } from "@/lib/r2";
 import PhotoUploader from "@/components/PhotoUploader";
-import DeletePhotoButton from "@/components/DeletePhotoButton";
+import PhotoGallery from "@/components/PhotoGallery";
 
 export const dynamic = "force-dynamic";
 
@@ -58,25 +58,7 @@ export default async function FotograflarPage() {
       )}
 
       {photos.length > 0 ? (
-        <div className="mt-12 grid w-full max-w-3xl grid-cols-2 gap-2 sm:grid-cols-3">
-          {photos.map((p) => (
-            <div
-              key={p.id}
-              className="group relative aspect-square overflow-hidden rounded-xl border border-line bg-white/40"
-            >
-              <a href={`/foto/${p.key}`} target="_blank" rel="noreferrer">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`/foto/${p.key}?w=600`}
-                  alt="Düğün fotoğrafı"
-                  loading="lazy"
-                  className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                />
-              </a>
-              {admin && <DeletePhotoButton id={p.id} />}
-            </div>
-          ))}
-        </div>
+        <PhotoGallery photos={photos} admin={admin} />
       ) : (
         <div className="mt-12 w-full max-w-md rounded-2xl border border-dashed border-line bg-white/40 px-6 py-14 text-center text-ink-soft">
           Henüz fotoğraf yok. İlk yükleyen sen ol! 📸

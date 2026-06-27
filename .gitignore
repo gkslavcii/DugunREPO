@@ -37,6 +37,9 @@ yarn-error.log*
 # yerel geçici betikler
 /_*.mjs
 
+# toplu indirilen fotograflar
+/indirilen-fotograflar/
+
 # vercel
 .vercel
 
