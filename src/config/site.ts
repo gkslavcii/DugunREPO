@@ -26,12 +26,12 @@ export const siteConfig = {
     kina: {
       eyebrow: "Kına Gecemize Hoş Geldiniz",
       welcome:
-        "Bu güzel geceyi bizimle paylaştığınız için teşekkür ederiz. Kınamıza kattığınız her renk, kalbimizde özel bir yer tutacak.",
+        "Bu güzel geceyi bizimle paylaştığınız için teşekkür ederiz 💛",
     },
     dugun: {
       eyebrow: "Düğünümüze Hoş Geldiniz",
       welcome:
-        "En mutlu günümüzde yanımızda olduğunuz için minnettarız. Bırakacağınız her kare ve her satır, bu anıyı bizimle birlikte ölümsüzleştirecek.",
+        "En mutlu günümüzde yanımızda olduğunuz için minnettarız 💛",
     },
   } satisfies Record<EventMode, EventContent>,
 } as const;

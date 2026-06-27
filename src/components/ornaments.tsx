@@ -22,7 +22,7 @@ export function Sprig({ className = "" }: { className?: string }) {
 /** Çiftin baş harflerinden zarif, mühür benzeri bir monogram. */
 export function Monogram({ left, right }: { left: string; right: string }) {
   return (
-    <div className="relative flex h-[72px] w-[72px] items-center justify-center">
+    <div className="relative flex h-16 w-16 items-center justify-center sm:h-[72px] sm:w-[72px]">
       <svg
         viewBox="0 0 100 100"
         className="absolute inset-0 h-full w-full text-dusk-deep/35"
@@ -39,9 +39,9 @@ export function Monogram({ left, right }: { left: string; right: string }) {
           opacity="0.6"
         />
       </svg>
-      <span className="font-display text-2xl tracking-wide text-ink">
+      <span className="font-display text-xl tracking-wide text-ink sm:text-2xl">
         {left}
-        <span className="mx-0.5 align-middle text-lg italic text-dusk-deep">
+        <span className="mx-0.5 align-middle text-base italic text-dusk-deep sm:text-lg">
           &amp;
         </span>
         {right}
