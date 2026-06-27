@@ -1,6 +1,7 @@
 import {
   S3Client,
   PutObjectCommand,
+  GetObjectCommand,
   HeadObjectCommand,
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
@@ -14,9 +15,7 @@ const bucket = process.env.R2_BUCKET;
 const publicBase = process.env.R2_PUBLIC_URL;
 
 export function isR2Configured(): boolean {
-  return Boolean(
-    accountId && accessKeyId && secretAccessKey && bucket && publicBase,
-  );
+  return Boolean(accountId && accessKeyId && secretAccessKey && bucket);
 }
 
 let _client: S3Client | null = null;
@@ -54,7 +53,7 @@ export function newKey(contentType: string): string {
 }
 
 export function publicUrl(key: string): string {
-  return `${publicBase!.replace(/\/$/, "")}/${key}`;
+  return `${(publicBase ?? "").replace(/\/$/, "")}/${key}`;
 }
 
 /** Tarayıcının doğrudan R2'ye yüklemesi için kısa ömürlü imzalı PUT adresi. */
@@ -80,4 +79,16 @@ export async function objectExists(key: string): Promise<boolean> {
 
 export async function deleteObject(key: string): Promise<void> {
   await client().send(new DeleteObjectCommand({ Bucket: bucket!, Key: key }));
+}
+
+/** Nesneyi R2'den çeker (S3 endpoint üzerinden — r2.dev'e bağımlı değil). */
+export async function getObject(key: string) {
+  if (!isR2Configured()) return null;
+  try {
+    return await client().send(
+      new GetObjectCommand({ Bucket: bucket!, Key: key }),
+    );
+  } catch {
+    return null;
+  }
 }

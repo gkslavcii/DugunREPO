@@ -8,7 +8,7 @@ import DeletePhotoButton from "@/components/DeletePhotoButton";
 
 export const dynamic = "force-dynamic";
 
-type Photo = { id: string; url: string };
+type Photo = { id: string; key: string };
 
 export default async function FotograflarPage() {
   const { coupleNames } = siteConfig;
@@ -18,7 +18,7 @@ export default async function FotograflarPage() {
   if (sb) {
     const { data } = await sb
       .from("photos")
-      .select("id, url")
+      .select("id, key")
       .order("created_at", { ascending: false });
     photos = (data as Photo[]) ?? [];
   }
@@ -64,10 +64,10 @@ export default async function FotograflarPage() {
               key={p.id}
               className="group relative aspect-square overflow-hidden rounded-xl border border-line bg-white/40"
             >
-              <a href={p.url} target="_blank" rel="noreferrer">
+              <a href={`/foto/${p.key}`} target="_blank" rel="noreferrer">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={p.url}
+                  src={`/foto/${p.key}?w=600`}
                   alt="Düğün fotoğrafı"
                   loading="lazy"
                   className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
