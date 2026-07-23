@@ -4,6 +4,7 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 import { getMode } from "@/lib/settings";
 import AdminLogin from "@/components/AdminLogin";
 import DeleteNoteButton from "@/components/DeleteNoteButton";
+import DownloadAllButton from "@/components/DownloadAllButton";
 import { logoutAction, setModeAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +25,7 @@ export default async function AdminPage() {
   const sb = getSupabaseAdmin();
   let notes: Note[] = [];
   let dbError = false;
+  let photoCount = 0;
   if (sb) {
     try {
       const { data, error } = await sb
@@ -35,8 +37,17 @@ export default async function AdminPage() {
     } catch {
       dbError = true;
     }
+    try {
+      const { count } = await sb
+        .from("photos")
+        .select("id", { count: "exact", head: true });
+      photoCount = count ?? 0;
+    } catch {
+      /* sessizce geç */
+    }
   }
   const mode = await getMode();
+  const publicCount = notes.filter((n) => n.is_public).length;
 
   const fmt = new Intl.DateTimeFormat("tr-TR", {
     dateStyle: "long",
@@ -60,7 +71,7 @@ export default async function AdminPage() {
       </div>
 
       {/* Anasayfa modu anahtarı */}
-      <section className="mb-8 flex items-center justify-between gap-4 rounded-2xl border border-line bg-white/60 p-5">
+      <section className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-line bg-white/60 p-5">
         <div>
           <p className="text-sm text-ink-soft">Anasayfa modu</p>
           <p className="font-display text-2xl text-ink">
@@ -79,6 +90,37 @@ export default async function AdminPage() {
         </form>
       </section>
 
+      {/* İstatistik + toplu indirme */}
+      <section className="mb-8 rounded-2xl border border-line bg-white/60 p-5">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+            <span>
+              <span className="font-display text-2xl text-ink">
+                {photoCount}
+              </span>{" "}
+              <span className="text-ink-soft">fotoğraf</span>
+            </span>
+            <span>
+              <span className="font-display text-2xl text-ink">
+                {notes.length}
+              </span>{" "}
+              <span className="text-ink-soft">not</span>
+            </span>
+            <span>
+              <span className="font-display text-2xl text-ink">
+                {publicCount}
+              </span>{" "}
+              <span className="text-ink-soft">herkese açık</span>
+            </span>
+          </div>
+          <DownloadAllButton />
+        </div>
+        <p className="mt-3 text-xs text-ink-soft/70">
+          ZIP orijinal (tam kalite) dosyaları indirir. Çok fazla fotoğraf varsa
+          bilgisayardan <code>scripts/fotograflari-indir.mjs</code> daha hızlıdır.
+        </p>
+      </section>
+
       <h2 className="mb-3 font-display text-2xl text-ink">Andaç Notları</h2>
 
       {dbError ? (
@@ -86,46 +128,37 @@ export default async function AdminPage() {
           Notlar şu an yüklenemiyor (Supabase ulaşılamıyor). Proje uykudaysa
           panelinden uyandırıp tekrar dene.
         </div>
+      ) : notes.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-line bg-white/40 px-6 py-16 text-center text-ink-soft">
+          Henüz not yok. Misafirler bıraktıkça burada görünecek.
+        </div>
       ) : (
-        <>
-          <p className="mb-6 text-sm text-ink-soft">
-            Toplam <span className="font-semibold text-ink">{notes.length}</span>{" "}
-            not
-          </p>
-
-          {notes.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-line bg-white/40 px-6 py-16 text-center text-ink-soft">
-              Henüz not yok. Misafirler bıraktıkça burada görünecek.
-            </div>
-          ) : (
-            <ul className="flex flex-col gap-4">
-              {notes.map((n) => (
-                <li
-                  key={n.id}
-                  className="rounded-2xl border border-line bg-white/60 p-5 shadow-sm"
-                >
-                  <p className="whitespace-pre-wrap leading-relaxed text-ink">
-                    {n.content}
-                  </p>
-                  <div className="mt-4 flex items-center justify-between gap-3 border-t border-line/70 pt-3 text-xs text-ink-soft">
-                    <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
-                      <span className="font-medium text-ink">
-                        {n.name || "İsimsiz misafir"}
-                      </span>
-                      <span>· {fmt.format(new Date(n.created_at))}</span>
-                      {n.is_public && (
-                        <span className="rounded-full bg-sage/25 px-2 py-0.5 text-[10px] font-medium text-[#5f6e46]">
-                          herkese açık
-                        </span>
-                      )}
+        <ul className="flex flex-col gap-4">
+          {notes.map((n) => (
+            <li
+              key={n.id}
+              className="rounded-2xl border border-line bg-white/60 p-5 shadow-sm"
+            >
+              <p className="whitespace-pre-wrap leading-relaxed text-ink">
+                {n.content}
+              </p>
+              <div className="mt-4 flex items-center justify-between gap-3 border-t border-line/70 pt-3 text-xs text-ink-soft">
+                <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+                  <span className="font-medium text-ink">
+                    {n.name || "İsimsiz misafir"}
+                  </span>
+                  <span>· {fmt.format(new Date(n.created_at))}</span>
+                  {n.is_public && (
+                    <span className="rounded-full bg-sage/25 px-2 py-0.5 text-[10px] font-medium text-[#5f6e46]">
+                      herkese açık
                     </span>
-                    <DeleteNoteButton id={n.id} />
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </>
+                  )}
+                </span>
+                <DeleteNoteButton id={n.id} />
+              </div>
+            </li>
+          ))}
+        </ul>
       )}
 
       <Link

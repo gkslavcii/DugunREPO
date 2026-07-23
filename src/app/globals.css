@@ -89,3 +89,12 @@ body {
     display: none;
   }
 }
+
+@keyframes wallFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
