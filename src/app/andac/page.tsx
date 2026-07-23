@@ -18,13 +18,17 @@ export default async function AndacPage() {
   const sb = getSupabaseAdmin();
   let publicNotes: PublicNote[] = [];
   if (sb) {
-    const { data } = await sb
-      .from("notes")
-      .select("id, content, name, created_at")
-      .eq("is_public", true)
-      .order("created_at", { ascending: false })
-      .limit(50);
-    publicNotes = (data as PublicNote[]) ?? [];
+    try {
+      const { data } = await sb
+        .from("notes")
+        .select("id, content, name, created_at")
+        .eq("is_public", true)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      publicNotes = (data as PublicNote[]) ?? [];
+    } catch {
+      publicNotes = [];
+    }
   }
 
   const fmt = new Intl.DateTimeFormat("tr-TR", { dateStyle: "long" });

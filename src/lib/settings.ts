@@ -26,7 +26,11 @@ export async function getMode(): Promise<EventMode> {
 export async function setMode(mode: EventMode): Promise<void> {
   const sb = getSupabaseAdmin();
   if (!sb) return;
-  await sb
-    .from("app_settings")
-    .upsert({ id: 1, mode, updated_at: new Date().toISOString() });
+  try {
+    await sb
+      .from("app_settings")
+      .upsert({ id: 1, mode, updated_at: new Date().toISOString() });
+  } catch {
+    // backend ulaşılamıyorsa sessizce geç
+  }
 }

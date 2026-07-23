@@ -15,12 +15,18 @@ export default async function FotograflarPage() {
 
   const sb = getSupabaseAdmin();
   let photos: Photo[] = [];
+  let dbError = false;
   if (sb) {
-    const { data } = await sb
-      .from("photos")
-      .select("id, key")
-      .order("created_at", { ascending: false });
-    photos = (data as Photo[]) ?? [];
+    try {
+      const { data, error } = await sb
+        .from("photos")
+        .select("id, key")
+        .order("created_at", { ascending: false });
+      if (error) dbError = true;
+      else photos = (data as Photo[]) ?? [];
+    } catch {
+      dbError = true;
+    }
   }
 
   const admin = await isAdmin();
@@ -57,7 +63,11 @@ export default async function FotograflarPage() {
         </p>
       )}
 
-      {photos.length > 0 ? (
+      {dbError ? (
+        <div className="mt-12 w-full max-w-md rounded-2xl border border-dashed border-line bg-white/40 px-6 py-14 text-center text-ink-soft">
+          Fotoğraflar şu an yüklenemiyor. Lütfen birazdan tekrar deneyin. 🙏
+        </div>
+      ) : photos.length > 0 ? (
         <PhotoGallery photos={photos} admin={admin} />
       ) : (
         <div className="mt-12 w-full max-w-md rounded-2xl border border-dashed border-line bg-white/40 px-6 py-14 text-center text-ink-soft">

@@ -29,15 +29,21 @@ export async function submitAndac(
       message: "Sistem henüz hazır değil. Lütfen birazdan tekrar deneyin.",
     };
 
-  const { error } = await supabase
-    .from("notes")
-    .insert({ content, name: name || null, is_public: isPublic });
-
-  if (error)
+  try {
+    const { error } = await supabase
+      .from("notes")
+      .insert({ content, name: name || null, is_public: isPublic });
+    if (error)
+      return {
+        ok: false,
+        message: "Bir şeyler ters gitti, tekrar dener misiniz?",
+      };
+  } catch {
     return {
       ok: false,
-      message: "Bir şeyler ters gitti, tekrar dener misiniz?",
+      message: "Sistem şu an yanıt vermiyor, birazdan tekrar dener misiniz?",
     };
+  }
 
   revalidatePath("/andac");
   return { ok: true, message: "Notunuz bize ulaştı, çok teşekkür ederiz! 💛" };

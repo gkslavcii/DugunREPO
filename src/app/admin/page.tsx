@@ -23,12 +23,18 @@ export default async function AdminPage() {
 
   const sb = getSupabaseAdmin();
   let notes: Note[] = [];
+  let dbError = false;
   if (sb) {
-    const { data } = await sb
-      .from("notes")
-      .select("id, content, name, created_at, is_public")
-      .order("created_at", { ascending: false });
-    notes = (data as Note[]) ?? [];
+    try {
+      const { data, error } = await sb
+        .from("notes")
+        .select("id, content, name, created_at, is_public")
+        .order("created_at", { ascending: false });
+      if (error) dbError = true;
+      else notes = (data as Note[]) ?? [];
+    } catch {
+      dbError = true;
+    }
   }
   const mode = await getMode();
 
@@ -74,41 +80,52 @@ export default async function AdminPage() {
       </section>
 
       <h2 className="mb-3 font-display text-2xl text-ink">Andaç Notları</h2>
-      <p className="mb-6 text-sm text-ink-soft">
-        Toplam <span className="font-semibold text-ink">{notes.length}</span> not
-      </p>
 
-      {notes.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-line bg-white/40 px-6 py-16 text-center text-ink-soft">
-          Henüz not yok. Misafirler bıraktıkça burada görünecek.
+      {dbError ? (
+        <div className="rounded-2xl border border-dashed border-line bg-white/40 px-6 py-10 text-center text-ink-soft">
+          Notlar şu an yüklenemiyor (Supabase ulaşılamıyor). Proje uykudaysa
+          panelinden uyandırıp tekrar dene.
         </div>
       ) : (
-        <ul className="flex flex-col gap-4">
-          {notes.map((n) => (
-            <li
-              key={n.id}
-              className="rounded-2xl border border-line bg-white/60 p-5 shadow-sm"
-            >
-              <p className="whitespace-pre-wrap leading-relaxed text-ink">
-                {n.content}
-              </p>
-              <div className="mt-4 flex items-center justify-between gap-3 border-t border-line/70 pt-3 text-xs text-ink-soft">
-                <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
-                  <span className="font-medium text-ink">
-                    {n.name || "İsimsiz misafir"}
-                  </span>
-                  <span>· {fmt.format(new Date(n.created_at))}</span>
-                  {n.is_public && (
-                    <span className="rounded-full bg-sage/25 px-2 py-0.5 text-[10px] font-medium text-[#5f6e46]">
-                      herkese açık
+        <>
+          <p className="mb-6 text-sm text-ink-soft">
+            Toplam <span className="font-semibold text-ink">{notes.length}</span>{" "}
+            not
+          </p>
+
+          {notes.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-line bg-white/40 px-6 py-16 text-center text-ink-soft">
+              Henüz not yok. Misafirler bıraktıkça burada görünecek.
+            </div>
+          ) : (
+            <ul className="flex flex-col gap-4">
+              {notes.map((n) => (
+                <li
+                  key={n.id}
+                  className="rounded-2xl border border-line bg-white/60 p-5 shadow-sm"
+                >
+                  <p className="whitespace-pre-wrap leading-relaxed text-ink">
+                    {n.content}
+                  </p>
+                  <div className="mt-4 flex items-center justify-between gap-3 border-t border-line/70 pt-3 text-xs text-ink-soft">
+                    <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+                      <span className="font-medium text-ink">
+                        {n.name || "İsimsiz misafir"}
+                      </span>
+                      <span>· {fmt.format(new Date(n.created_at))}</span>
+                      {n.is_public && (
+                        <span className="rounded-full bg-sage/25 px-2 py-0.5 text-[10px] font-medium text-[#5f6e46]">
+                          herkese açık
+                        </span>
+                      )}
                     </span>
-                  )}
-                </span>
-                <DeleteNoteButton id={n.id} />
-              </div>
-            </li>
-          ))}
-        </ul>
+                    <DeleteNoteButton id={n.id} />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
       )}
 
       <Link
