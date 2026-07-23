@@ -45,24 +45,25 @@ export default function PhotoGallery({
 
   return (
     <>
-      <div className="mt-12 grid w-full max-w-3xl grid-cols-2 gap-2 sm:grid-cols-3">
+      {/* masonry (Pinterest tarzı) düzen */}
+      <div className="mt-12 w-full max-w-3xl columns-2 gap-2 sm:columns-3">
         {photos.map((p, i) => (
           <div
             key={p.id}
-            className="group relative aspect-square overflow-hidden rounded-xl border border-line bg-white/40"
+            className="group relative mb-2 break-inside-avoid overflow-hidden rounded-xl border border-line bg-white/40"
           >
             <button
               type="button"
               onClick={() => setIndex(i)}
               aria-label="Fotoğrafı büyüt"
-              className="block h-full w-full cursor-zoom-in"
+              className="block w-full cursor-zoom-in"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={`/foto/${p.key}?w=600`}
                 alt="Düğün fotoğrafı"
                 loading="lazy"
-                className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                className="w-full transition duration-300 group-hover:scale-[1.03]"
               />
             </button>
             {admin && <DeletePhotoButton id={p.id} />}

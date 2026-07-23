@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { submitAndac, type AndacState } from "@/app/andac/actions";
+import Petals from "./Petals";
 
 export default function AndacForm() {
   const [state, formAction, pending] = useActionState<AndacState, FormData>(
@@ -13,6 +14,7 @@ export default function AndacForm() {
   if (state?.ok) {
     return (
       <div className="flex flex-col items-center gap-5 text-center">
+        <Petals />
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-dusk/20 text-3xl">
           💛
         </div>

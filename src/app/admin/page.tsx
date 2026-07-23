@@ -113,7 +113,15 @@ export default async function AdminPage() {
               <span className="text-ink-soft">herkese açık</span>
             </span>
           </div>
-          <DownloadAllButton />
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href="/admin/ani-kitabi"
+              className="rounded-full border border-ink/15 px-5 py-2.5 text-sm text-ink transition hover:bg-ink/[0.04]"
+            >
+              📖 Anı Kitabı
+            </Link>
+            <DownloadAllButton />
+          </div>
         </div>
         <p className="mt-3 text-xs text-ink-soft/70">
           ZIP orijinal (tam kalite) dosyaları indirir. Çok fazla fotoğraf varsa

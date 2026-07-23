@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createUploadUrl, registerPhoto } from "@/app/fotograflar/actions";
+import Petals from "./Petals";
 
 export default function PhotoUploader() {
   const router = useRouter();
@@ -11,6 +12,7 @@ export default function PhotoUploader() {
   const [done, setDone] = useState(0);
   const [total, setTotal] = useState(0);
   const [status, setStatus] = useState<string | null>(null);
+  const [celebrate, setCelebrate] = useState(0);
 
   async function handleFiles(fileList: FileList) {
     const files = Array.from(fileList).filter(
@@ -62,12 +64,14 @@ export default function PhotoUploader() {
         ? `${ok} fotoğraf yüklendi, teşekkürler! 💛`
         : `${ok} yüklendi, ${fail} yüklenemedi.`,
     );
+    if (ok > 0) setCelebrate((c) => c + 1);
     if (inputRef.current) inputRef.current.value = "";
     router.refresh();
   }
 
   return (
     <div className="flex w-full max-w-md flex-col items-center gap-3">
+      {celebrate > 0 && <Petals key={celebrate} />}
       <input
         ref={inputRef}
         type="file"
