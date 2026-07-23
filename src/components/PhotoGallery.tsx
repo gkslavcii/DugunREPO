@@ -62,7 +62,7 @@ export default function PhotoGallery({
               <img
                 src={`/foto/${p.key}?w=600`}
                 alt="Düğün fotoğrafı"
-                loading="lazy"
+                loading={i < 12 ? "eager" : "lazy"}
                 className="w-full transition duration-300 group-hover:scale-[1.03]"
               />
             </button>
