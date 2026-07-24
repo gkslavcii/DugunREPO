@@ -46,6 +46,38 @@ function fmt(sec: number): string {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
+type OS = "ios" | "android" | "other";
+
+function detectOS(): OS {
+  if (typeof navigator === "undefined") return "other";
+  const ua = navigator.userAgent || "";
+  if (/iPad|iPhone|iPod/.test(ua)) return "ios";
+  if (/Android/.test(ua)) return "android";
+  return "other";
+}
+
+function permSteps(os: OS): string[] {
+  if (os === "ios")
+    return [
+      'Ayarlar → Safari → "Kamera ve Mikrofon Erişimi" açık olmalı',
+      'Site açıkken adres çubuğundaki "aA" simgesine dokun',
+      '"Web Sitesi Ayarları" → Mikrofon → "İzin Ver"',
+      "Sayfayı yenileyip mikrofona tekrar dokun",
+    ];
+  if (os === "android")
+    return [
+      "Adres çubuğundaki 🔒 simgesine dokun",
+      '"İzinler" (Site ayarları)',
+      'Mikrofon → "İzin ver"',
+      "Sayfayı yenileyip tekrar dene",
+    ];
+  return [
+    "Adres çubuğundaki 🔒 / kamera simgesine tıkla",
+    'Mikrofon → "İzin ver"',
+    '"Tekrar dene"ye bas',
+  ];
+}
+
 const MicIcon = () => (
   <svg
     viewBox="0 0 24 24"
@@ -70,6 +102,8 @@ export default function VoiceRecorder() {
   const [error, setError] = useState<string | null>(null);
   const [celebrate, setCelebrate] = useState(0);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [permHelp, setPermHelp] = useState(false);
+  const [os, setOs] = useState<OS>("other");
 
   const mrRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -85,6 +119,7 @@ export default function VoiceRecorder() {
       !!navigator.mediaDevices?.getUserMedia &&
       typeof MediaRecorder !== "undefined";
     setSupported(ok);
+    setOs(detectOS());
   }, []);
 
   const stopTracks = useCallback(() => {
@@ -131,8 +166,8 @@ export default function VoiceRecorder() {
       let msg =
         "Mikrofona erişilemedi. Tarayıcı iznini kontrol edip tekrar dene.";
       if (name === "NotAllowedError" || name === "SecurityError") {
-        msg =
-          "Mikrofon izni verilmedi. Adres çubuğundaki 🔒 / kamera simgesine dokunup mikrofona izin ver, sonra tekrar dene. (Bağlantıyı uygulama içi tarayıcı yerine Safari/Chrome'da açman gerekebilir.)";
+        msg = "Mikrofon izni kapalı görünüyor.";
+        setPermHelp(true);
       } else if (name === "NotFoundError" || name === "OverconstrainedError") {
         msg = "Cihazında mikrofon bulunamadı.";
       } else if (name === "NotReadableError") {
@@ -368,7 +403,75 @@ export default function VoiceRecorder() {
         <p className="py-4 text-sm font-medium text-dusk-deep">Gönderiliyor…</p>
       )}
 
-      {error && <p className="text-center text-sm text-[#b56a60]">{error}</p>}
+      {error && (
+        <p className="text-center text-sm text-[#b56a60]">
+          {error}
+          {permHelp && (
+            <>
+              {" "}
+              <button
+                type="button"
+                onClick={() => setPermHelp(true)}
+                className="font-medium underline underline-offset-2"
+              >
+                Nasıl açarım?
+              </button>
+            </>
+          )}
+        </p>
+      )}
+
+      {/* izin yönlendirme popup'ı */}
+      {permHelp && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/70 p-5 backdrop-blur-sm"
+          onClick={() => setPermHelp(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl bg-ivory p-6 text-left shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-3 flex items-center gap-2">
+              <span className="text-2xl">🎙️</span>
+              <h3 className="font-display text-2xl text-ink">
+                Mikrofon izni gerekli
+              </h3>
+            </div>
+            <p className="mb-4 text-sm text-ink-soft">
+              Sesli mesaj için mikrofona izin vermen yeterli:
+            </p>
+            <ol className="mb-5 flex flex-col gap-2.5">
+              {permSteps(os).map((s, i) => (
+                <li key={i} className="flex gap-2.5 text-sm text-ink">
+                  <span className="flex h-5 w-5 flex-none items-center justify-center rounded-full bg-dusk-deep/15 text-xs font-medium text-dusk-deep">
+                    {i + 1}
+                  </span>
+                  <span>{s}</span>
+                </li>
+              ))}
+            </ol>
+            <div className="flex gap-2.5">
+              <button
+                type="button"
+                onClick={() => setPermHelp(false)}
+                className="inline-flex h-11 flex-1 items-center justify-center rounded-full border border-ink/15 bg-white/60 text-sm text-ink transition hover:bg-white"
+              >
+                Kapat
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setPermHelp(false);
+                  startRecording();
+                }}
+                className="inline-flex h-11 flex-1 items-center justify-center rounded-full bg-ink text-sm font-medium text-ivory transition hover:opacity-90"
+              >
+                Tekrar dene
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
