@@ -59,9 +59,9 @@ function detectOS(): OS {
 function permSteps(os: OS): string[] {
   if (os === "ios")
     return [
-      'Ayarlar → Safari → "Kamera ve Mikrofon Erişimi" açık olmalı',
-      'Site açıkken adres çubuğundaki "aA" simgesine dokun',
-      '"Web Sitesi Ayarları" → Mikrofon → "İzin Ver"',
+      'Adres çubuğunun solundaki "aA" simgesine dokun',
+      '"Web Sitesi Ayarları"na gir',
+      'Mikrofon → "İzin Ver" seç',
       "Sayfayı yenileyip mikrofona tekrar dokun",
     ];
   if (os === "android")
