@@ -46,30 +46,53 @@ function fmt(sec: number): string {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
-type OS = "ios" | "android" | "other";
+type Env = "ios-safari" | "ios-chrome" | "ios-other" | "android" | "other";
 
-function detectOS(): OS {
+function detectEnv(): Env {
   if (typeof navigator === "undefined") return "other";
   const ua = navigator.userAgent || "";
-  if (/iPad|iPhone|iPod/.test(ua)) return "ios";
+  const isIOS =
+    /iPad|iPhone|iPod/.test(ua) ||
+    (/Macintosh/.test(ua) &&
+      typeof document !== "undefined" &&
+      "ontouchend" in document); // iPadOS masaüstü modu
+  if (isIOS) {
+    if (/CriOS/.test(ua)) return "ios-chrome";
+    if (/FxiOS|EdgiOS|OPiOS|GSA/.test(ua)) return "ios-other";
+    return "ios-safari";
+  }
   if (/Android/.test(ua)) return "android";
   return "other";
 }
 
-function permSteps(os: OS): string[] {
-  if (os === "ios")
+function permSteps(env: Env): string[] {
+  if (env === "ios-safari")
     return [
-      'Adres çubuğunun solundaki "aA" simgesine dokun',
+      'Adres çubuğundaki "aA" simgesine dokun',
       '"Web Sitesi Ayarları"na gir',
       'Mikrofon → "İzin Ver" seç',
       "Sayfayı yenileyip mikrofona tekrar dokun",
     ];
-  if (os === "android")
+  if (env === "ios-chrome")
+    return [
+      "iPhone Ayarlar uygulamasını aç",
+      "Aşağı inip Chrome'a dokun",
+      'Mikrofon iznini aç',
+      "Bu sayfaya dönüp tekrar dene",
+    ];
+  if (env === "ios-other")
+    return [
+      "iPhone Ayarlar uygulamasını aç",
+      "Aşağı inip kullandığın tarayıcıya dokun",
+      "Mikrofon iznini aç",
+      "Bu sayfaya dönüp tekrar dene",
+    ];
+  if (env === "android")
     return [
       "Adres çubuğundaki 🔒 simgesine dokun",
       '"İzinler" (Site ayarları)',
       'Mikrofon → "İzin ver"',
-      "Sayfayı yenileyip tekrar dene",
+      "Kapalıysa: Ayarlar → Uygulamalar → tarayıcın → İzinler → Mikrofon",
     ];
   return [
     "Adres çubuğundaki 🔒 / kamera simgesine tıkla",
@@ -103,7 +126,7 @@ export default function VoiceRecorder() {
   const [celebrate, setCelebrate] = useState(0);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [permHelp, setPermHelp] = useState(false);
-  const [os, setOs] = useState<OS>("other");
+  const [env, setEnv] = useState<Env>("other");
 
   const mrRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -119,7 +142,7 @@ export default function VoiceRecorder() {
       !!navigator.mediaDevices?.getUserMedia &&
       typeof MediaRecorder !== "undefined";
     setSupported(ok);
-    setOs(detectOS());
+    setEnv(detectEnv());
   }, []);
 
   const stopTracks = useCallback(() => {
@@ -384,14 +407,14 @@ export default function VoiceRecorder() {
             <button
               type="button"
               onClick={startRecording}
-              className="inline-flex h-11 flex-1 items-center justify-center rounded-full border border-ink/15 bg-white/50 px-6 text-sm text-ink transition hover:bg-white"
+              className="inline-flex h-12 w-full items-center justify-center rounded-full border border-ink/15 bg-white/50 px-6 text-sm text-ink transition hover:bg-white sm:w-auto sm:flex-1"
             >
               Tekrar kaydet
             </button>
             <button
               type="button"
               onClick={send}
-              className="inline-flex h-11 flex-1 items-center justify-center rounded-full bg-ink px-6 text-sm font-medium text-ivory shadow-sm transition hover:opacity-90"
+              className="inline-flex h-12 w-full items-center justify-center rounded-full bg-ink px-6 text-sm font-medium text-ivory shadow-sm transition hover:opacity-90 sm:w-auto sm:flex-1"
             >
               Gönder
             </button>
@@ -441,7 +464,7 @@ export default function VoiceRecorder() {
               Sesli mesaj için mikrofona izin vermen yeterli:
             </p>
             <ol className="mb-5 flex flex-col gap-2.5">
-              {permSteps(os).map((s, i) => (
+              {permSteps(env).map((s, i) => (
                 <li key={i} className="flex gap-2.5 text-sm text-ink">
                   <span className="flex h-5 w-5 flex-none items-center justify-center rounded-full bg-dusk-deep/15 text-xs font-medium text-dusk-deep">
                     {i + 1}
