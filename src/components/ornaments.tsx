@@ -20,12 +20,24 @@ export function Sprig({ className = "" }: { className?: string }) {
 }
 
 /** Çiftin baş harflerinden zarif, mühür benzeri bir monogram. */
-export function Monogram({ left, right }: { left: string; right: string }) {
+export function Monogram({
+  left,
+  right,
+  variant = "dark",
+}: {
+  left: string;
+  right: string;
+  /** "light" → koyu/fotoğraflı arka planlar için krem tonlu render. */
+  variant?: "dark" | "light";
+}) {
+  const light = variant === "light";
   return (
     <div className="relative flex h-16 w-16 items-center justify-center sm:h-[72px] sm:w-[72px]">
       <svg
         viewBox="0 0 100 100"
-        className="absolute inset-0 h-full w-full text-dusk-deep/35"
+        className={`absolute inset-0 h-full w-full ${
+          light ? "text-ivory/45" : "text-dusk-deep/35"
+        }`}
         fill="none"
         stroke="currentColor"
       >
@@ -39,9 +51,17 @@ export function Monogram({ left, right }: { left: string; right: string }) {
           opacity="0.6"
         />
       </svg>
-      <span className="font-display text-xl tracking-wide text-ink sm:text-2xl">
+      <span
+        className={`font-display text-xl tracking-wide sm:text-2xl ${
+          light ? "text-ivory" : "text-ink"
+        }`}
+      >
         {left}
-        <span className="mx-0.5 align-middle text-base italic text-dusk-deep sm:text-lg">
+        <span
+          className={`mx-0.5 align-middle text-base italic sm:text-lg ${
+            light ? "text-[#e7d0a2]" : "text-dusk-deep"
+          }`}
+        >
           &amp;
         </span>
         {right}
