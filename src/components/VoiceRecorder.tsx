@@ -126,10 +126,20 @@ export default function VoiceRecorder() {
     let stream: MediaStream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    } catch {
-      setError(
-        "Mikrofona erişilemedi. Tarayıcı iznini kontrol edip tekrar dene.",
-      );
+    } catch (err) {
+      const name = (err as { name?: string })?.name ?? "";
+      let msg =
+        "Mikrofona erişilemedi. Tarayıcı iznini kontrol edip tekrar dene.";
+      if (name === "NotAllowedError" || name === "SecurityError") {
+        msg =
+          "Mikrofon izni verilmedi. Adres çubuğundaki 🔒 / kamera simgesine dokunup mikrofona izin ver, sonra tekrar dene. (Bağlantıyı uygulama içi tarayıcı yerine Safari/Chrome'da açman gerekebilir.)";
+      } else if (name === "NotFoundError" || name === "OverconstrainedError") {
+        msg = "Cihazında mikrofon bulunamadı.";
+      } else if (name === "NotReadableError") {
+        msg =
+          "Mikrofon başka bir uygulama tarafından kullanılıyor olabilir. Diğer uygulamaları kapatıp tekrar dene.";
+      }
+      setError(msg);
       setStatus("error");
       return;
     }
@@ -309,7 +319,7 @@ export default function VoiceRecorder() {
           ) : (
             <>
               <p className="text-sm font-medium text-ink">
-                Sezin &amp; Göksel&apos;e sesli mesaj bırak
+                Bize sesli mesaj bırak
               </p>
               <p className="mt-1 text-xs text-ink-soft">
                 Mikrofona dokun · en fazla 2 dakika · yalnızca çift dinler
