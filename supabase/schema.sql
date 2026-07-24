@@ -34,3 +34,13 @@ create table if not exists public.app_settings (
 insert into public.app_settings (id, mode) values (1, 'dugun')
   on conflict (id) do nothing;
 alter table public.app_settings enable row level security;
+
+-- 4) Sesli mesajlar (R2'deki ses dosyalarının kaydı; yalnızca yönetici dinler)
+create table if not exists public.voice_messages (
+  id           uuid primary key default gen_random_uuid(),
+  key          text not null,
+  name         text,
+  duration_sec int,
+  created_at   timestamptz not null default now()
+);
+alter table public.voice_messages enable row level security;

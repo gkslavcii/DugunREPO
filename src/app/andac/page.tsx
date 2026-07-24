@@ -1,7 +1,9 @@
 import Link from "next/link";
 import AndacForm from "@/components/AndacForm";
+import VoiceRecorder from "@/components/VoiceRecorder";
 import { siteConfig } from "@/config/site";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { isR2Configured } from "@/lib/r2";
 import { Monogram } from "@/components/ornaments";
 
 export const dynamic = "force-dynamic";
@@ -55,12 +57,27 @@ export default async function AndacPage() {
           <span className="h-px w-10 bg-line" />
         </div>
         <p className="mb-9 max-w-md text-center leading-relaxed text-ink-soft">
-          Bize bir not, bir dilek ya da güzel bir anı bırakın. Notunuzu yalnızca
-          biz göreceğiz — dilersen herkese açık da paylaşabilirsin.
+          Bize bir not, bir dilek ya da güzel bir anı bırakın — ister yazarak,
+          ister sesinizle. Mesajınızı yalnızca biz göreceğiz; yazılı notu
+          dilersen herkese açık da paylaşabilirsin.
         </p>
       </div>
 
       <AndacForm />
+
+      {/* veya sesli mesaj */}
+      {isR2Configured() && (
+        <div className="mt-14 flex w-full max-w-lg flex-col items-center">
+          <div className="mb-7 flex w-full items-center gap-4">
+            <span className="h-px flex-1 bg-line" />
+            <span className="whitespace-nowrap text-xs uppercase tracking-[0.3em] text-ink-soft">
+              veya sesini bırak
+            </span>
+            <span className="h-px flex-1 bg-line" />
+          </div>
+          <VoiceRecorder />
+        </div>
+      )}
 
       {publicNotes.length > 0 && (
         <section className="mt-16 w-full max-w-lg">

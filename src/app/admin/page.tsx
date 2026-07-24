@@ -4,6 +4,7 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 import { getMode } from "@/lib/settings";
 import AdminLogin from "@/components/AdminLogin";
 import DeleteNoteButton from "@/components/DeleteNoteButton";
+import DeleteVoiceButton from "@/components/DeleteVoiceButton";
 import DownloadAllButton from "@/components/DownloadAllButton";
 import { logoutAction, setModeAction } from "./actions";
 
@@ -17,6 +18,14 @@ type Note = {
   is_public: boolean;
 };
 
+type Voice = {
+  id: string;
+  key: string;
+  name: string | null;
+  duration_sec: number | null;
+  created_at: string;
+};
+
 export default async function AdminPage() {
   if (!(await isAdmin())) {
     return <AdminLogin configured={adminConfigured()} />;
@@ -24,6 +33,7 @@ export default async function AdminPage() {
 
   const sb = getSupabaseAdmin();
   let notes: Note[] = [];
+  let voices: Voice[] = [];
   let dbError = false;
   let photoCount = 0;
   if (sb) {
@@ -42,6 +52,15 @@ export default async function AdminPage() {
         .from("photos")
         .select("id", { count: "exact", head: true });
       photoCount = count ?? 0;
+    } catch {
+      /* sessizce geç */
+    }
+    try {
+      const { data } = await sb
+        .from("voice_messages")
+        .select("id, key, name, duration_sec, created_at")
+        .order("created_at", { ascending: false });
+      voices = (data as Voice[]) ?? [];
     } catch {
       /* sessizce geç */
     }
@@ -112,6 +131,12 @@ export default async function AdminPage() {
               </span>{" "}
               <span className="text-ink-soft">herkese açık</span>
             </span>
+            <span>
+              <span className="font-display text-2xl text-ink">
+                {voices.length}
+              </span>{" "}
+              <span className="text-ink-soft">sesli mesaj</span>
+            </span>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Link
@@ -128,6 +153,45 @@ export default async function AdminPage() {
           bilgisayardan <code>scripts/fotograflari-indir.mjs</code> daha hızlıdır.
         </p>
       </section>
+
+      <h2 className="mb-3 font-display text-2xl text-ink">Sesli Mesajlar</h2>
+      {voices.length === 0 ? (
+        <div className="mb-10 rounded-2xl border border-dashed border-line bg-white/40 px-6 py-10 text-center text-ink-soft">
+          Henüz sesli mesaj yok. Misafirler bıraktıkça burada dinleyebilirsin.
+        </div>
+      ) : (
+        <ul className="mb-10 flex flex-col gap-3">
+          {voices.map((v) => (
+            <li
+              key={v.id}
+              className="rounded-2xl border border-line bg-white/60 p-4 shadow-sm"
+            >
+              <div className="flex items-center justify-between gap-3 text-xs text-ink-soft">
+                <span className="flex flex-wrap items-center gap-x-1.5">
+                  <span className="font-medium text-ink">
+                    {v.name || "İsimsiz misafir"}
+                  </span>
+                  <span>· {fmt.format(new Date(v.created_at))}</span>
+                  {v.duration_sec ? (
+                    <span>
+                      · {Math.floor(v.duration_sec / 60)}:
+                      {String(v.duration_sec % 60).padStart(2, "0")}
+                    </span>
+                  ) : null}
+                </span>
+                <DeleteVoiceButton id={v.id} />
+              </div>
+              {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+              <audio
+                src={`/ses/${v.key}`}
+                controls
+                preload="none"
+                className="mt-3 w-full"
+              />
+            </li>
+          ))}
+        </ul>
+      )}
 
       <h2 className="mb-3 font-display text-2xl text-ink">Andaç Notları</h2>
 

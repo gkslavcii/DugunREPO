@@ -40,16 +40,22 @@ const EXT: Record<string, string> = {
   "image/gif": "gif",
   "image/heic": "heic",
   "image/heif": "heif",
+  "audio/webm": "webm",
+  "audio/ogg": "ogg",
+  "audio/mp4": "m4a",
+  "audio/x-m4a": "m4a",
+  "audio/mpeg": "mp3",
+  "audio/wav": "wav",
 };
 
 /** Sunucuda benzersiz, tarihe göre gruplanmış bir nesne anahtarı üretir. */
-export function newKey(contentType: string): string {
+export function newKey(contentType: string, folder = "fotograflar"): string {
   const ext = EXT[contentType] ?? "bin";
   const d = new Date();
   const ymd = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(
     d.getDate(),
   ).padStart(2, "0")}`;
-  return `fotograflar/${ymd}/${randomUUID()}.${ext}`;
+  return `${folder}/${ymd}/${randomUUID()}.${ext}`;
 }
 
 export function publicUrl(key: string): string {
