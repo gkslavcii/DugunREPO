@@ -84,15 +84,15 @@ export default function PhotoUploader() {
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={busy}
-        className="inline-flex h-12 w-full items-center justify-center rounded-full bg-ink px-8 font-body text-sm font-medium tracking-wide text-ivory shadow-sm transition hover:opacity-90 disabled:opacity-70"
+        className="inline-flex h-12 w-full items-center justify-center rounded-full bg-ivory px-8 font-body text-sm font-medium tracking-wide text-ink shadow-sm transition hover:bg-white disabled:opacity-70"
       >
         {busy ? `Yükleniyor… ${done}/${total}` : "Fotoğraf Seç ve Yükle"}
       </button>
-      <p className="text-center text-xs text-ink-soft">
+      <p className="text-center text-xs text-ivory/60">
         Birden fazla seçebilirsin · yüklenenler herkese açık galeride görünür
       </p>
       {status && (
-        <p className="text-center text-sm font-medium text-dusk-deep">
+        <p className="text-center text-sm font-medium text-[#e7d0a2]">
           {status}
         </p>
       )}

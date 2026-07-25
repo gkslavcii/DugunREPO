@@ -303,7 +303,7 @@ export default function VoiceRecorder() {
 
   if (!supported) {
     return (
-      <div className="w-full max-w-lg rounded-2xl border border-line bg-white/50 p-6 text-center text-sm text-ink-soft">
+      <div className="w-full max-w-lg rounded-2xl border border-white/15 bg-white/[0.07] p-6 text-center text-sm text-ivory/70 backdrop-blur-sm">
         Tarayıcın ses kaydını desteklemiyor gibi. Güncel Chrome ya da Safari ile
         tekrar dener misin? 🎙️
       </div>
@@ -312,20 +312,20 @@ export default function VoiceRecorder() {
 
   if (status === "done") {
     return (
-      <div className="flex w-full max-w-lg flex-col items-center gap-4 rounded-2xl border border-line bg-white/60 p-8 text-center shadow-sm">
+      <div className="flex w-full max-w-lg flex-col items-center gap-4 rounded-2xl border border-white/15 bg-white/[0.07] p-8 text-center shadow-sm backdrop-blur-sm">
         {celebrate > 0 && <Petals key={celebrate} />}
         <div className="flex h-14 w-14 items-center justify-center rounded-full bg-dusk/20 text-2xl">
           🎙️
         </div>
-        <p className="font-display text-3xl text-ink">Sesin bize ulaştı!</p>
-        <p className="text-sm text-ink-soft">Çok teşekkür ederiz 💛</p>
+        <p className="font-display text-3xl text-ivory">Sesin bize ulaştı!</p>
+        <p className="text-sm text-ivory/80">Çok teşekkür ederiz 💛</p>
         <button
           type="button"
           onClick={() => {
             setError(null);
             setStatus("idle");
           }}
-          className="mt-1 rounded-full border border-ink/15 bg-white/50 px-6 py-2.5 text-sm text-ink transition hover:bg-white"
+          className="mt-1 rounded-full border border-white/20 bg-white/10 px-6 py-2.5 text-sm text-ivory backdrop-blur-sm transition hover:bg-white/20"
         >
           Bir tane daha bırak
         </button>
@@ -338,7 +338,7 @@ export default function VoiceRecorder() {
   const uploading = status === "uploading";
 
   return (
-    <div className="flex w-full max-w-lg flex-col items-center gap-4 rounded-2xl border border-line bg-white/50 p-6 shadow-sm">
+    <div className="flex w-full max-w-lg flex-col items-center gap-4 rounded-2xl border border-white/15 bg-white/[0.07] p-6 shadow-sm backdrop-blur-sm">
       {celebrate > 0 && <Petals key={celebrate} />}
 
       {/* kayıt / durdur düğmesi */}
@@ -354,7 +354,7 @@ export default function VoiceRecorder() {
             className={`relative flex h-16 w-16 items-center justify-center rounded-full shadow-md transition ${
               recording
                 ? "bg-rose text-white"
-                : "bg-ink text-ivory hover:opacity-90"
+                : "bg-ivory text-ink hover:bg-white"
             }`}
           >
             {recording ? (
@@ -370,16 +370,16 @@ export default function VoiceRecorder() {
       {!recorded && !uploading && (
         <div className="text-center">
           {recording ? (
-            <p className="font-display text-2xl text-ink">
+            <p className="font-display text-2xl text-ivory">
               {fmt(elapsed)}{" "}
               <span className="align-middle text-sm text-rose">● kaydediliyor</span>
             </p>
           ) : (
             <>
-              <p className="text-sm font-medium text-ink">
+              <p className="text-sm font-medium text-ivory">
                 Bize sesli mesaj bırak
               </p>
-              <p className="mt-1 text-xs text-ink-soft">
+              <p className="mt-1 text-xs text-ivory/60">
                 Mikrofona dokun · en fazla 2 dakika · herkese açık paylaşılmaz
               </p>
             </>
@@ -390,7 +390,7 @@ export default function VoiceRecorder() {
       {/* önizleme + gönderme */}
       {recorded && previewUrl && (
         <div className="flex w-full flex-col items-center gap-4">
-          <p className="text-sm text-ink-soft">
+          <p className="text-sm text-ivory/70">
             Kaydını dinle{durationRef.current ? ` · ${fmt(durationRef.current)}` : ""}
           </p>
           {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
@@ -401,20 +401,20 @@ export default function VoiceRecorder() {
             onChange={(e) => setName(e.target.value)}
             maxLength={80}
             placeholder="İsmin (isteğe bağlı)"
-            className="w-full rounded-full border border-line bg-white/70 px-4 py-2.5 text-sm text-ink shadow-sm outline-none transition placeholder:text-ink-soft/50 focus:border-dusk-deep focus:ring-2 focus:ring-dusk/30"
+            className="w-full rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-ivory shadow-sm outline-none backdrop-blur-sm transition placeholder:text-ivory/40 focus:border-dusk focus:ring-2 focus:ring-dusk/30"
           />
           <div className="flex w-full flex-col gap-2.5 sm:flex-row">
             <button
               type="button"
               onClick={startRecording}
-              className="inline-flex h-12 w-full items-center justify-center rounded-full border border-ink/15 bg-white/50 px-6 text-sm text-ink transition hover:bg-white sm:w-auto sm:flex-1"
+              className="inline-flex h-12 w-full items-center justify-center rounded-full border border-white/20 bg-white/10 px-6 text-sm text-ivory backdrop-blur-sm transition hover:bg-white/20 sm:w-auto sm:flex-1"
             >
               Tekrar kaydet
             </button>
             <button
               type="button"
               onClick={send}
-              className="inline-flex h-12 w-full items-center justify-center rounded-full bg-ink px-6 text-sm font-medium text-ivory shadow-sm transition hover:opacity-90 sm:w-auto sm:flex-1"
+              className="inline-flex h-12 w-full items-center justify-center rounded-full bg-ivory px-6 text-sm font-medium text-ink shadow-sm transition hover:bg-white sm:w-auto sm:flex-1"
             >
               Gönder
             </button>
@@ -423,11 +423,11 @@ export default function VoiceRecorder() {
       )}
 
       {uploading && (
-        <p className="py-4 text-sm font-medium text-dusk-deep">Gönderiliyor…</p>
+        <p className="py-4 text-sm font-medium text-dusk">Gönderiliyor…</p>
       )}
 
       {error && (
-        <p className="text-center text-sm text-[#b56a60]">
+        <p className="text-center text-sm text-rose">
           {error}
           {permHelp && (
             <>

@@ -18,19 +18,19 @@ export default function AndacForm() {
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-dusk/20 text-3xl">
           💛
         </div>
-        <p className="font-display text-4xl text-ink">Teşekkürler!</p>
-        <p className="max-w-sm text-ink-soft">{state.message}</p>
+        <p className="font-display text-4xl text-ivory">Teşekkürler!</p>
+        <p className="max-w-sm text-ivory/80">{state.message}</p>
         <div className="mt-2 flex gap-3">
           <button
             type="button"
             onClick={() => location.reload()}
-            className="rounded-full border border-ink/15 bg-white/50 px-6 py-2.5 text-sm text-ink transition hover:bg-white"
+            className="rounded-full border border-white/20 bg-white/10 px-6 py-2.5 text-sm text-ivory backdrop-blur-sm transition hover:bg-white/20"
           >
             Bir not daha bırak
           </button>
           <Link
             href="/"
-            className="rounded-full bg-ink px-6 py-2.5 text-sm text-ivory transition hover:opacity-90"
+            className="rounded-full bg-ivory px-6 py-2.5 text-sm text-ink transition hover:bg-white"
           >
             Ana sayfa
           </Link>
@@ -42,8 +42,8 @@ export default function AndacForm() {
   return (
     <form action={formAction} className="flex w-full max-w-lg flex-col gap-5">
       <div className="flex flex-col gap-2">
-        <label htmlFor="content" className="text-sm font-medium text-ink">
-          Notunuz <span className="text-[#b56a60]">*</span>
+        <label htmlFor="content" className="text-sm font-medium text-ivory">
+          Notunuz <span className="text-rose">*</span>
         </label>
         <textarea
           id="content"
@@ -52,14 +52,14 @@ export default function AndacForm() {
           maxLength={1000}
           rows={5}
           placeholder="Sezin & Göksel'e güzel dilekleriniz..."
-          className="w-full resize-none rounded-2xl border border-line bg-white/70 px-4 py-3 text-ink shadow-sm outline-none transition placeholder:text-ink-soft/50 focus:border-dusk-deep focus:ring-2 focus:ring-dusk/30"
+          className="w-full resize-none rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-ivory shadow-sm outline-none backdrop-blur-sm transition placeholder:text-ivory/40 focus:border-dusk focus:ring-2 focus:ring-dusk/30"
         />
       </div>
 
       <div className="flex flex-col gap-2">
-        <label htmlFor="name" className="text-sm font-medium text-ink">
+        <label htmlFor="name" className="text-sm font-medium text-ivory">
           İsminiz{" "}
-          <span className="font-normal text-ink-soft">(isteğe bağlı)</span>
+          <span className="font-normal text-ivory/60">(isteğe bağlı)</span>
         </label>
         <input
           id="name"
@@ -67,18 +67,18 @@ export default function AndacForm() {
           type="text"
           maxLength={80}
           placeholder="Adınız Soyadınız"
-          className="w-full rounded-full border border-line bg-white/70 px-4 py-3 text-ink shadow-sm outline-none transition placeholder:text-ink-soft/50 focus:border-dusk-deep focus:ring-2 focus:ring-dusk/30"
+          className="w-full rounded-full border border-white/20 bg-white/10 px-4 py-3 text-ivory shadow-sm outline-none backdrop-blur-sm transition placeholder:text-ivory/40 focus:border-dusk focus:ring-2 focus:ring-dusk/30"
         />
       </div>
 
-      <label className="flex cursor-pointer items-start gap-2.5 text-sm text-ink-soft">
+      <label className="flex cursor-pointer items-start gap-2.5 text-sm text-ivory/80">
         <input
           type="checkbox"
           name="is_public"
-          className="mt-0.5 h-4 w-4 accent-dusk-deep"
+          className="mt-0.5 h-4 w-4 accent-dusk"
         />
         <span>
-          Bu notu <span className="font-medium text-ink">herkese açık</span>{" "}
+          Bu notu <span className="font-medium text-ivory">herkese açık</span>{" "}
           yayınla (Andaç sayfasında diğer misafirler de görebilsin)
         </span>
       </label>
@@ -94,13 +94,13 @@ export default function AndacForm() {
       />
 
       {state && !state.ok && (
-        <p className="text-sm text-[#b56a60]">{state.message}</p>
+        <p className="text-sm text-rose">{state.message}</p>
       )}
 
       <button
         type="submit"
         disabled={pending}
-        className="mt-1 inline-flex h-12 items-center justify-center rounded-full bg-ink px-8 text-sm font-medium tracking-wide text-ivory shadow-sm transition hover:opacity-90 disabled:opacity-60"
+        className="mt-1 inline-flex h-12 items-center justify-center rounded-full bg-ivory px-8 text-sm font-medium tracking-wide text-ink shadow-sm transition hover:bg-white disabled:opacity-60"
       >
         {pending ? "Gönderiliyor..." : "Gönder"}
       </button>

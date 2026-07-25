@@ -50,7 +50,7 @@ export default function PhotoGallery({
         {photos.map((p, i) => (
           <div
             key={p.id}
-            className="group relative mb-2 break-inside-avoid overflow-hidden rounded-xl border border-line bg-white/40"
+            className="group relative mb-2 break-inside-avoid overflow-hidden rounded-xl border border-white/10 bg-white/[0.05]"
           >
             <button
               type="button"
