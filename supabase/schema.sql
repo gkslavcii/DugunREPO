@@ -55,7 +55,9 @@ alter table public.app_settings
 alter table public.app_settings
   add column if not exists countdown_enabled boolean not null default false;
 alter table public.app_settings
-  add column if not exists countdown_date date;
+  add column if not exists countdown_kina_date date;
+alter table public.app_settings
+  add column if not exists countdown_dugun_date date;
 
 -- 5) Ziyaretler (kendi ziyaretçi sayacımız; cihaz başına 1 kez eklenir)
 create table if not exists public.visits (

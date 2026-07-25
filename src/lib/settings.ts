@@ -9,14 +9,16 @@ export type AppSettings = {
   mode: EventMode;
   requirePhotoApproval: boolean;
   countdownEnabled: boolean;
-  countdownDate: string | null; // "YYYY-MM-DD"
+  countdownKinaDate: string | null; // "YYYY-MM-DD"
+  countdownDugunDate: string | null; // "YYYY-MM-DD"
 };
 
 const DEFAULTS: AppSettings = {
   mode: siteConfig.mode,
   requirePhotoApproval: false,
   countdownEnabled: false,
-  countdownDate: null,
+  countdownKinaDate: null,
+  countdownDugunDate: null,
 };
 
 export async function getSettings(): Promise<AppSettings> {
@@ -25,7 +27,9 @@ export async function getSettings(): Promise<AppSettings> {
   try {
     const { data } = await sb
       .from("app_settings")
-      .select("mode, require_photo_approval, countdown_enabled, countdown_date")
+      .select(
+        "mode, require_photo_approval, countdown_enabled, countdown_kina_date, countdown_dugun_date",
+      )
       .eq("id", 1)
       .single();
     if (!data) return DEFAULTS;
@@ -35,7 +39,8 @@ export async function getSettings(): Promise<AppSettings> {
       mode,
       requirePhotoApproval: Boolean(data.require_photo_approval),
       countdownEnabled: Boolean(data.countdown_enabled),
-      countdownDate: (data.countdown_date as string | null) ?? null,
+      countdownKinaDate: (data.countdown_kina_date as string | null) ?? null,
+      countdownDugunDate: (data.countdown_dugun_date as string | null) ?? null,
     };
   } catch {
     return DEFAULTS;
@@ -74,7 +79,12 @@ export async function setRequirePhotoApproval(value: boolean): Promise<void> {
 
 export async function setCountdown(
   enabled: boolean,
-  date: string | null,
+  kinaDate: string | null,
+  dugunDate: string | null,
 ): Promise<void> {
-  await patch({ countdown_enabled: enabled, countdown_date: date });
+  await patch({
+    countdown_enabled: enabled,
+    countdown_kina_date: kinaDate,
+    countdown_dugun_date: dugunDate,
+  });
 }

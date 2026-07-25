@@ -14,6 +14,8 @@ export default async function Home() {
   const mode = settings.mode;
   const ev = events[mode];
   const countdownLabel = mode === "kina" ? "Kınaya" : "Düğüne";
+  const countdownDate =
+    mode === "kina" ? settings.countdownKinaDate : settings.countdownDugunDate;
 
   return (
     <main className="relative flex min-h-dvh flex-col items-center justify-between overflow-hidden px-6 py-10 sm:py-12">
@@ -105,12 +107,9 @@ export default async function Home() {
           {ev.welcome}
         </p>
 
-        {settings.countdownEnabled && settings.countdownDate && (
+        {settings.countdownEnabled && countdownDate && (
           <div className="reveal mt-6" style={{ animationDelay: "0.68s" }}>
-            <Countdown
-              targetIso={settings.countdownDate}
-              label={countdownLabel}
-            />
+            <Countdown targetIso={countdownDate} label={countdownLabel} />
           </div>
         )}
 

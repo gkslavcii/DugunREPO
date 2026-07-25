@@ -146,10 +146,6 @@ export default async function AdminPage() {
           <p className="font-display text-2xl text-ink">
             {settings.requirePhotoApproval ? "Açık" : "Kapalı"}
           </p>
-          <p className="mt-1 text-xs text-ink-soft/70">
-            Açıkken yüklenen fotoğraflar, sen onaylayana kadar galeride ve
-            duvarda görünmez.
-          </p>
         </div>
         <form action={setPhotoApprovalAction}>
           <input
@@ -171,28 +167,45 @@ export default async function AdminPage() {
             {settings.countdownEnabled ? "Açık" : "Kapalı"}
           </p>
         </div>
-        <form
-          action={setCountdownAction}
-          className="flex flex-wrap items-center gap-3"
-        >
-          <input
-            type="date"
-            name="date"
-            defaultValue={settings.countdownDate ?? ""}
-            className="rounded-full border border-line bg-white px-4 py-2 text-sm text-ink outline-none focus:border-dusk-deep"
-          />
-          <label className="flex items-center gap-2 text-sm text-ink-soft">
-            <input
-              type="checkbox"
-              name="enabled"
-              defaultChecked={settings.countdownEnabled}
-              className="h-4 w-4 accent-dusk-deep"
-            />
-            Anasayfada göster
-          </label>
-          <button className="rounded-full bg-dusk-deep px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90">
-            Kaydet
-          </button>
+        <form action={setCountdownAction} className="flex flex-col gap-3">
+          <div className="flex flex-wrap gap-4">
+            <label className="flex flex-col gap-1 text-xs text-ink-soft">
+              Kına tarihi
+              <input
+                type="date"
+                name="kina_date"
+                defaultValue={settings.countdownKinaDate ?? ""}
+                className="rounded-full border border-line bg-white px-4 py-2 text-sm text-ink outline-none focus:border-dusk-deep"
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-xs text-ink-soft">
+              Düğün tarihi
+              <input
+                type="date"
+                name="dugun_date"
+                defaultValue={settings.countdownDugunDate ?? ""}
+                className="rounded-full border border-line bg-white px-4 py-2 text-sm text-ink outline-none focus:border-dusk-deep"
+              />
+            </label>
+          </div>
+          <div className="flex flex-wrap items-center gap-4">
+            <label className="flex items-center gap-2 text-sm text-ink-soft">
+              <input
+                type="checkbox"
+                name="enabled"
+                defaultChecked={settings.countdownEnabled}
+                className="h-4 w-4 accent-dusk-deep"
+              />
+              Anasayfada göster
+            </label>
+            <button className="rounded-full bg-dusk-deep px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90">
+              Kaydet
+            </button>
+          </div>
+          <p className="text-xs text-ink-soft/70">
+            Üstteki moda göre (Kına/Düğün) ilgili tarihe kalan gün anasayfada
+            gösterilir.
+          </p>
         </form>
       </section>
 

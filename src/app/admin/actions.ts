@@ -58,8 +58,9 @@ export async function setPhotoApprovalAction(formData: FormData) {
 export async function setCountdownAction(formData: FormData) {
   if (!(await isAdmin())) return;
   const enabled = formData.get("enabled") === "on";
-  const date = String(formData.get("date") ?? "").trim() || null;
-  await setCountdown(enabled, date);
+  const kina = String(formData.get("kina_date") ?? "").trim() || null;
+  const dugun = String(formData.get("dugun_date") ?? "").trim() || null;
+  await setCountdown(enabled, kina, dugun);
   revalidatePath("/");
   revalidatePath("/admin");
 }
