@@ -15,6 +15,7 @@ export default async function SlaytPage() {
       const { data } = await sb
         .from("photos")
         .select("key")
+        .eq("approved", true)
         .order("created_at", { ascending: false })
         .limit(100);
       initial = ((data as { key: string }[]) ?? []).map((p) => p.key);

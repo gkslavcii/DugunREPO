@@ -44,3 +44,22 @@ create table if not exists public.voice_messages (
   created_at   timestamptz not null default now()
 );
 alter table public.voice_messages enable row level security;
+
+-- Fotoğraf onayı: onay istenirse yeni fotoğraflar approved=false (beklemede) gelir.
+alter table public.photos
+  add column if not exists approved boolean not null default true;
+
+-- Ek ayarlar: foto onayı + anasayfa geri sayımı
+alter table public.app_settings
+  add column if not exists require_photo_approval boolean not null default false;
+alter table public.app_settings
+  add column if not exists countdown_enabled boolean not null default false;
+alter table public.app_settings
+  add column if not exists countdown_date date;
+
+-- 5) Ziyaretler (kendi ziyaretçi sayacımız; cihaz başına 1 kez eklenir)
+create table if not exists public.visits (
+  id         uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now()
+);
+alter table public.visits enable row level security;

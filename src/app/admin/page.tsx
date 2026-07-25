@@ -1,12 +1,19 @@
 import Link from "next/link";
 import { isAdmin, adminConfigured } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { getMode } from "@/lib/settings";
+import { getSettings } from "@/lib/settings";
 import AdminLogin from "@/components/AdminLogin";
 import DeleteNoteButton from "@/components/DeleteNoteButton";
 import DeleteVoiceButton from "@/components/DeleteVoiceButton";
+import DeletePhotoButton from "@/components/DeletePhotoButton";
 import DownloadAllButton from "@/components/DownloadAllButton";
-import { logoutAction, setModeAction } from "./actions";
+import {
+  logoutAction,
+  setModeAction,
+  setPhotoApprovalAction,
+  setCountdownAction,
+} from "./actions";
+import { approvePhoto } from "../fotograflar/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +33,8 @@ type Voice = {
   created_at: string;
 };
 
+type PendingPhoto = { id: string; key: string };
+
 export default async function AdminPage() {
   if (!(await isAdmin())) {
     return <AdminLogin configured={adminConfigured()} />;
@@ -34,8 +43,10 @@ export default async function AdminPage() {
   const sb = getSupabaseAdmin();
   let notes: Note[] = [];
   let voices: Voice[] = [];
+  let pending: PendingPhoto[] = [];
   let dbError = false;
   let photoCount = 0;
+  let visitCount = 0;
   if (sb) {
     try {
       const { data, error } = await sb
@@ -64,8 +75,27 @@ export default async function AdminPage() {
     } catch {
       /* sessizce geç */
     }
+    try {
+      const { data } = await sb
+        .from("photos")
+        .select("id, key")
+        .eq("approved", false)
+        .order("created_at", { ascending: false });
+      pending = (data as PendingPhoto[]) ?? [];
+    } catch {
+      /* sessizce geç */
+    }
+    try {
+      const { count } = await sb
+        .from("visits")
+        .select("id", { count: "exact", head: true });
+      visitCount = count ?? 0;
+    } catch {
+      /* sessizce geç */
+    }
   }
-  const mode = await getMode();
+  const settings = await getSettings();
+  const mode = settings.mode;
   const publicCount = notes.filter((n) => n.is_public).length;
 
   const fmt = new Intl.DateTimeFormat("tr-TR", {
@@ -109,6 +139,63 @@ export default async function AdminPage() {
         </form>
       </section>
 
+      {/* Fotoğraf onayı anahtarı */}
+      <section className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-line bg-white/60 p-5">
+        <div className="pr-2">
+          <p className="text-sm text-ink-soft">Fotoğraf onayı</p>
+          <p className="font-display text-2xl text-ink">
+            {settings.requirePhotoApproval ? "Açık" : "Kapalı"}
+          </p>
+          <p className="mt-1 text-xs text-ink-soft/70">
+            Açıkken yüklenen fotoğraflar, sen onaylayana kadar galeride ve
+            duvarda görünmez.
+          </p>
+        </div>
+        <form action={setPhotoApprovalAction}>
+          <input
+            type="hidden"
+            name="value"
+            value={settings.requirePhotoApproval ? "off" : "on"}
+          />
+          <button className="whitespace-nowrap rounded-full bg-dusk-deep px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90">
+            {settings.requirePhotoApproval ? "Kapat" : "Aç"}
+          </button>
+        </form>
+      </section>
+
+      {/* Anasayfa geri sayımı */}
+      <section className="mb-6 rounded-2xl border border-line bg-white/60 p-5">
+        <div className="mb-3 flex items-baseline justify-between gap-3">
+          <p className="text-sm text-ink-soft">Anasayfa geri sayımı</p>
+          <p className="font-display text-xl text-ink">
+            {settings.countdownEnabled ? "Açık" : "Kapalı"}
+          </p>
+        </div>
+        <form
+          action={setCountdownAction}
+          className="flex flex-wrap items-center gap-3"
+        >
+          <input
+            type="date"
+            name="date"
+            defaultValue={settings.countdownDate ?? ""}
+            className="rounded-full border border-line bg-white px-4 py-2 text-sm text-ink outline-none focus:border-dusk-deep"
+          />
+          <label className="flex items-center gap-2 text-sm text-ink-soft">
+            <input
+              type="checkbox"
+              name="enabled"
+              defaultChecked={settings.countdownEnabled}
+              className="h-4 w-4 accent-dusk-deep"
+            />
+            Anasayfada göster
+          </label>
+          <button className="rounded-full bg-dusk-deep px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90">
+            Kaydet
+          </button>
+        </form>
+      </section>
+
       {/* İstatistik + toplu indirme */}
       <section className="mb-8 rounded-2xl border border-line bg-white/60 p-5">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -137,6 +224,12 @@ export default async function AdminPage() {
               </span>{" "}
               <span className="text-ink-soft">sesli mesaj</span>
             </span>
+            <span>
+              <span className="font-display text-2xl text-ink">
+                {visitCount}
+              </span>{" "}
+              <span className="text-ink-soft">ziyaretçi</span>
+            </span>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Link
@@ -149,6 +242,39 @@ export default async function AdminPage() {
           </div>
         </div>
       </section>
+
+      {pending.length > 0 && (
+        <section className="mb-8">
+          <h2 className="mb-3 font-display text-2xl text-ink">
+            Onay Bekleyen Fotoğraflar{" "}
+            <span className="text-base text-ink-soft">({pending.length})</span>
+          </h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {pending.map((p) => (
+              <div
+                key={p.id}
+                className="overflow-hidden rounded-xl border border-line bg-white/60"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`/foto/${p.key}?w=400`}
+                  alt=""
+                  className="aspect-square w-full object-cover"
+                />
+                <div className="flex items-center justify-between gap-2 p-2">
+                  <form action={approvePhoto}>
+                    <input type="hidden" name="id" value={p.id} />
+                    <button className="rounded-full bg-sage px-4 py-1.5 text-xs font-medium text-white transition hover:opacity-90">
+                      Onayla
+                    </button>
+                  </form>
+                  <DeletePhotoButton id={p.id} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <h2 className="mb-3 font-display text-2xl text-ink">Sesli Mesajlar</h2>
       {voices.length === 0 ? (

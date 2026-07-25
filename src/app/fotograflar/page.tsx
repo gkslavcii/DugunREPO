@@ -23,6 +23,7 @@ export default async function FotograflarPage() {
       const { data, error } = await sb
         .from("photos")
         .select("id, key")
+        .eq("approved", true)
         .order("created_at", { ascending: false });
       if (error) dbError = true;
       else photos = (data as Photo[]) ?? [];

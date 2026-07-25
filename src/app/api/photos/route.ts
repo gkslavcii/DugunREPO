@@ -11,6 +11,7 @@ export async function GET() {
       const { data } = await sb
         .from("photos")
         .select("key")
+        .eq("approved", true)
         .order("created_at", { ascending: false })
         .limit(2000);
       photos = (data as { key: string }[]) ?? [];

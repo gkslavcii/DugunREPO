@@ -1,18 +1,24 @@
 import Link from "next/link";
 import { siteConfig } from "@/config/site";
-import { getMode } from "@/lib/settings";
+import { getSettings } from "@/lib/settings";
 import FloatingLeaves from "@/components/FloatingLeaves";
+import Countdown from "@/components/Countdown";
+import VisitBeacon from "@/components/VisitBeacon";
 import { Monogram, Sprig } from "@/components/ornaments";
 
 export const revalidate = 60;
 
 export default async function Home() {
   const { coupleNames, events } = siteConfig;
-  const mode = await getMode();
+  const settings = await getSettings();
+  const mode = settings.mode;
   const ev = events[mode];
+  const countdownLabel = mode === "kina" ? "Kınaya" : "Düğüne";
 
   return (
     <main className="relative flex min-h-dvh flex-col items-center justify-between overflow-hidden px-6 py-10 sm:py-12">
+      <VisitBeacon />
+
       {/* sinematik fotoğraf arka planı (bg-ink → foto gelmese de zemin koyu kalır) */}
       <div
         aria-hidden
@@ -98,6 +104,15 @@ export default async function Home() {
         >
           {ev.welcome}
         </p>
+
+        {settings.countdownEnabled && settings.countdownDate && (
+          <div className="reveal mt-6" style={{ animationDelay: "0.68s" }}>
+            <Countdown
+              targetIso={settings.countdownDate}
+              label={countdownLabel}
+            />
+          </div>
+        )}
 
         <div
           className="reveal mt-7 flex w-full max-w-sm flex-col gap-2.5 sm:mt-8 sm:max-w-none sm:flex-row sm:justify-center"

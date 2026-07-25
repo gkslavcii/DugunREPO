@@ -37,6 +37,7 @@ export default async function AniKitabiPage() {
       const { data } = await sb
         .from("photos")
         .select("key")
+        .eq("approved", true)
         .order("created_at", { ascending: false })
         .limit(300);
       photos = (data as Photo[]) ?? [];
