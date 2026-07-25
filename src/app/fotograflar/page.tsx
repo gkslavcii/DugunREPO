@@ -5,7 +5,8 @@ import { isAdmin } from "@/lib/auth";
 import { isR2Configured } from "@/lib/r2";
 import PhotoUploader from "@/components/PhotoUploader";
 import PhotoGallery from "@/components/PhotoGallery";
-import { Monogram } from "@/components/ornaments";
+import PageAmbience from "@/components/PageAmbience";
+import { Monogram, Sprig } from "@/components/ornaments";
 
 export const dynamic = "force-dynamic";
 
@@ -35,9 +36,7 @@ export default async function FotograflarPage() {
 
   return (
     <main className="relative flex min-h-dvh flex-col items-center px-6 py-16 sm:py-20">
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute left-1/2 top-0 h-[40vh] w-[40vh] -translate-x-1/2 rounded-full bg-sage/15 blur-3xl" />
-      </div>
+      <PageAmbience />
 
       <div
         className="reveal flex flex-col items-center"
@@ -51,9 +50,9 @@ export default async function FotograflarPage() {
           Fotoğraflar
         </h1>
         <div className="my-6 flex items-center gap-3">
-          <span className="h-px w-10 bg-line" />
+          <Sprig className="h-5 w-14 text-sage/80" />
           <span className="h-1.5 w-1.5 rotate-45 bg-dusk-deep/50" />
-          <span className="h-px w-10 bg-line" />
+          <Sprig className="h-5 w-14 -scale-x-100 text-sage/80" />
         </div>
         <p className="mb-8 max-w-md text-center leading-relaxed text-ink-soft">
           Çektiğiniz kareleri yükleyin, bu güzel günü hep birlikte

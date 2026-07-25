@@ -380,7 +380,7 @@ export default function VoiceRecorder() {
                 Bize sesli mesaj bırak
               </p>
               <p className="mt-1 text-xs text-ink-soft">
-                Mikrofona dokun · en fazla 2 dakika · yalnızca çift dinler
+                Mikrofona dokun · en fazla 2 dakika · herkese açık paylaşılmaz
               </p>
             </>
           )}

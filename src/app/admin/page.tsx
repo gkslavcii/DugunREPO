@@ -148,10 +148,6 @@ export default async function AdminPage() {
             <DownloadAllButton />
           </div>
         </div>
-        <p className="mt-3 text-xs text-ink-soft/70">
-          ZIP orijinal (tam kalite) dosyaları indirir. Çok fazla fotoğraf varsa
-          bilgisayardan <code>scripts/fotograflari-indir.mjs</code> daha hızlıdır.
-        </p>
       </section>
 
       <h2 className="mb-3 font-display text-2xl text-ink">Sesli Mesajlar</h2>
