@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { isAdmin } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { siteConfig } from "@/config/site";
+import { getSettings } from "@/lib/settings";
 import { Monogram, Sprig } from "@/components/ornaments";
 import PrintButton from "@/components/PrintButton";
 
@@ -19,7 +19,7 @@ type Photo = { key: string };
 export default async function AniKitabiPage() {
   if (!(await isAdmin())) redirect("/admin");
 
-  const { coupleNames } = siteConfig;
+  const { brideName, groomName } = await getSettings();
   const sb = getSupabaseAdmin();
   let notes: Note[] = [];
   let photos: Photo[] = [];
@@ -60,11 +60,11 @@ export default async function AniKitabiPage() {
 
       {/* kapak */}
       <section className="flex flex-col items-center py-8 text-center">
-        <Monogram left={coupleNames.bride[0]} right={coupleNames.groom[0]} />
+        <Monogram left={brideName[0]} right={groomName[0]} />
         <h1 className="mt-5 font-display text-5xl text-ink">
-          {coupleNames.bride}
+          {brideName}
           <span className="mx-2 italic text-dusk-deep">&amp;</span>
-          {coupleNames.groom}
+          {groomName}
         </h1>
         <p className="mt-2 text-xs uppercase tracking-[0.35em] text-ink-soft">
           Andaç Defteri

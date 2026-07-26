@@ -1,12 +1,14 @@
-import { siteConfig } from "@/config/site";
+import { getSettings } from "@/lib/settings";
 import { Monogram, Sprig } from "@/components/ornaments";
+
+export const dynamic = "force-dynamic";
 
 /**
  * Giriş afişi (masa kartının büyük versiyonu).
  * Tarayıcıdan "Yazdır → PDF" ile A5/A4 boyutunda baskı alınabilir.
  */
-export default function QrAfisPage() {
-  const { coupleNames } = siteConfig;
+export default async function QrAfisPage() {
+  const { brideName, groomName } = await getSettings();
 
   return (
     <main className="flex min-h-dvh items-center justify-center bg-ivory px-6 py-12 print:bg-white print:p-0">
@@ -15,15 +17,15 @@ export default function QrAfisPage() {
         <Sprig className="absolute right-6 top-7 h-6 w-20 -scale-x-100 text-sage/55" />
 
         <div className="flex flex-col items-center">
-          <Monogram left={coupleNames.bride[0]} right={coupleNames.groom[0]} />
+          <Monogram left={brideName[0]} right={groomName[0]} />
 
           <p className="mt-5 text-xs uppercase tracking-[0.35em] text-ink-soft">
             Anılarımızı Paylaşın
           </p>
           <h1 className="mt-3 font-display text-5xl leading-tight text-ink">
-            {coupleNames.bride}
+            {brideName}
             <span className="mx-2 italic text-dusk-deep">&amp;</span>
-            {coupleNames.groom}
+            {groomName}
           </h1>
 
           <div className="my-6 flex items-center gap-2">

@@ -8,6 +8,7 @@ import {
   setMode,
   setRequirePhotoApproval,
   setCountdown,
+  setContent,
 } from "@/lib/settings";
 import type { EventMode } from "@/config/site";
 
@@ -40,10 +41,10 @@ export async function deleteNoteAction(formData: FormData) {
 export async function setModeAction(formData: FormData) {
   if (!(await isAdmin())) return;
   const mode = String(formData.get("mode") ?? "");
-  if (mode === "kina" || mode === "dugun") {
+  if (mode === "kina" || mode === "nisan" || mode === "dugun") {
     await setMode(mode as EventMode);
     revalidatePath("/");
-    revalidatePath("/admin");
+    revalidatePath("/admin/ayarlar");
   }
 }
 
@@ -51,16 +52,40 @@ export async function setPhotoApprovalAction(formData: FormData) {
   if (!(await isAdmin())) return;
   const on = String(formData.get("value") ?? "") === "on";
   await setRequirePhotoApproval(on);
-  revalidatePath("/admin");
+  revalidatePath("/admin/ayarlar");
   revalidatePath("/fotograflar");
 }
 
 export async function setCountdownAction(formData: FormData) {
   if (!(await isAdmin())) return;
   const enabled = formData.get("enabled") === "on";
-  const kina = String(formData.get("kina_date") ?? "").trim() || null;
-  const dugun = String(formData.get("dugun_date") ?? "").trim() || null;
-  await setCountdown(enabled, kina, dugun);
+  const dates = {
+    kina: String(formData.get("kina_date") ?? "").trim() || null,
+    nisan: String(formData.get("nisan_date") ?? "").trim() || null,
+    dugun: String(formData.get("dugun_date") ?? "").trim() || null,
+  };
+  await setCountdown(enabled, dates);
   revalidatePath("/");
-  revalidatePath("/admin");
+  revalidatePath("/admin/ayarlar");
+}
+
+export async function saveContentAction(formData: FormData) {
+  if (!(await isAdmin())) return;
+  const g = (k: string) => String(formData.get(k) ?? "").trim() || null;
+  await setContent({
+    bride_name: g("bride_name"),
+    groom_name: g("groom_name"),
+    kina_eyebrow: g("kina_eyebrow"),
+    kina_welcome: g("kina_welcome"),
+    nisan_eyebrow: g("nisan_eyebrow"),
+    nisan_welcome: g("nisan_welcome"),
+    dugun_eyebrow: g("dugun_eyebrow"),
+    dugun_welcome: g("dugun_welcome"),
+    andac_desc: g("andac_desc"),
+    foto_desc: g("foto_desc"),
+  });
+  revalidatePath("/");
+  revalidatePath("/andac");
+  revalidatePath("/fotograflar");
+  revalidatePath("/admin/ayarlar");
 }

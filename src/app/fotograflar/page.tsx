@@ -1,8 +1,7 @@
 import Link from "next/link";
-import { siteConfig } from "@/config/site";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { isAdmin } from "@/lib/auth";
-import { requirePhotoApproval } from "@/lib/settings";
+import { getSettings } from "@/lib/settings";
 import { isR2Configured } from "@/lib/r2";
 import PhotoUploader from "@/components/PhotoUploader";
 import PhotoGallery from "@/components/PhotoGallery";
@@ -14,7 +13,12 @@ export const dynamic = "force-dynamic";
 type Photo = { id: string; key: string };
 
 export default async function FotograflarPage() {
-  const { coupleNames } = siteConfig;
+  const {
+    brideName,
+    groomName,
+    fotoDesc,
+    requirePhotoApproval: requireApproval,
+  } = await getSettings();
 
   const sb = getSupabaseAdmin();
   let photos: Photo[] = [];
@@ -35,7 +39,6 @@ export default async function FotograflarPage() {
 
   const admin = await isAdmin();
   const ready = isR2Configured();
-  const requireApproval = await requirePhotoApproval();
 
   return (
     <main className="relative flex min-h-dvh flex-col items-center px-6 py-16 sm:py-20">
@@ -45,13 +48,9 @@ export default async function FotograflarPage() {
         className="reveal flex flex-col items-center"
         style={{ animationDelay: "0.05s" }}
       >
-        <Monogram
-          left={coupleNames.bride[0]}
-          right={coupleNames.groom[0]}
-          variant="light"
-        />
+        <Monogram left={brideName[0]} right={groomName[0]} variant="light" />
         <p className="mt-4 text-xs uppercase tracking-[0.3em] text-ivory/70">
-          {coupleNames.bride} &amp; {coupleNames.groom}
+          {brideName} &amp; {groomName}
         </p>
         <h1 className="mt-2 font-display text-5xl text-ivory sm:text-6xl">
           Fotoğraflar
@@ -62,8 +61,7 @@ export default async function FotograflarPage() {
           <Sprig className="h-5 w-14 -scale-x-100 text-sage/80" />
         </div>
         <p className="mb-8 max-w-md text-center leading-relaxed text-ivory/80">
-          Çektiğiniz kareleri yükleyin, bu güzel günü hep birlikte
-          ölümsüzleştirelim.
+          {fotoDesc}
         </p>
       </div>
 

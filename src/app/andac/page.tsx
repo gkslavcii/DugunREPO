@@ -2,7 +2,7 @@ import Link from "next/link";
 import AndacForm from "@/components/AndacForm";
 import VoiceRecorder from "@/components/VoiceRecorder";
 import DarkBackdrop from "@/components/DarkBackdrop";
-import { siteConfig } from "@/config/site";
+import { getSettings } from "@/lib/settings";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { isR2Configured } from "@/lib/r2";
 import { Monogram, Sprig } from "@/components/ornaments";
@@ -17,7 +17,7 @@ type PublicNote = {
 };
 
 export default async function AndacPage() {
-  const { coupleNames } = siteConfig;
+  const { brideName, groomName, andacDesc } = await getSettings();
 
   const sb = getSupabaseAdmin();
   let publicNotes: PublicNote[] = [];
@@ -45,13 +45,9 @@ export default async function AndacPage() {
         className="reveal flex flex-col items-center"
         style={{ animationDelay: "0.05s" }}
       >
-        <Monogram
-          left={coupleNames.bride[0]}
-          right={coupleNames.groom[0]}
-          variant="light"
-        />
+        <Monogram left={brideName[0]} right={groomName[0]} variant="light" />
         <p className="mt-4 text-xs uppercase tracking-[0.3em] text-ivory/70">
-          {coupleNames.bride} &amp; {coupleNames.groom}
+          {brideName} &amp; {groomName}
         </p>
         <h1 className="mt-2 font-display text-5xl text-ivory sm:text-6xl">
           Andaç
@@ -62,9 +58,7 @@ export default async function AndacPage() {
           <Sprig className="h-5 w-14 -scale-x-100 text-sage/80" />
         </div>
         <p className="mb-9 max-w-md text-center leading-relaxed text-ivory/80">
-          Bize bir not, bir dilek ya da güzel bir anı bırakın — ister yazarak,
-          ister sesinizle. Mesajınızı yalnızca biz göreceğiz; yazılı notu
-          dilersen herkese açık da paylaşabilirsin.
+          {andacDesc}
         </p>
       </div>
 

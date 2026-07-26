@@ -1,18 +1,13 @@
 import Link from "next/link";
 import { isAdmin, adminConfigured } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { getSettings } from "@/lib/settings";
 import AdminLogin from "@/components/AdminLogin";
+import AdminTabs from "@/components/AdminTabs";
 import DeleteNoteButton from "@/components/DeleteNoteButton";
 import DeleteVoiceButton from "@/components/DeleteVoiceButton";
 import DeletePhotoButton from "@/components/DeletePhotoButton";
 import DownloadAllButton from "@/components/DownloadAllButton";
-import {
-  logoutAction,
-  setModeAction,
-  setPhotoApprovalAction,
-  setCountdownAction,
-} from "./actions";
+import { logoutAction } from "./actions";
 import { approvePhoto } from "../fotograflar/actions";
 
 export const dynamic = "force-dynamic";
@@ -94,8 +89,6 @@ export default async function AdminPage() {
       /* sessizce geç */
     }
   }
-  const settings = await getSettings();
-  const mode = settings.mode;
   const publicCount = notes.filter((n) => n.is_public).length;
 
   const fmt = new Intl.DateTimeFormat("tr-TR", {
@@ -119,91 +112,7 @@ export default async function AdminPage() {
         </form>
       </div>
 
-      {/* Anasayfa modu anahtarı */}
-      <section className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-line bg-white/60 p-5">
-        <div>
-          <p className="text-sm text-ink-soft">Anasayfa modu</p>
-          <p className="font-display text-2xl text-ink">
-            {mode === "kina" ? "Kına Gecesi" : "Düğün"}
-          </p>
-        </div>
-        <form action={setModeAction}>
-          <input
-            type="hidden"
-            name="mode"
-            value={mode === "kina" ? "dugun" : "kina"}
-          />
-          <button className="rounded-full bg-dusk-deep px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90">
-            {mode === "kina" ? "Düğün moduna geç" : "Kına moduna geç"}
-          </button>
-        </form>
-      </section>
-
-      {/* Fotoğraf onayı anahtarı */}
-      <section className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-line bg-white/60 p-5">
-        <div className="pr-2">
-          <p className="text-sm text-ink-soft">Fotoğraf onayı</p>
-          <p className="font-display text-2xl text-ink">
-            {settings.requirePhotoApproval ? "Açık" : "Kapalı"}
-          </p>
-        </div>
-        <form action={setPhotoApprovalAction}>
-          <input
-            type="hidden"
-            name="value"
-            value={settings.requirePhotoApproval ? "off" : "on"}
-          />
-          <button className="whitespace-nowrap rounded-full bg-dusk-deep px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90">
-            {settings.requirePhotoApproval ? "Kapat" : "Aç"}
-          </button>
-        </form>
-      </section>
-
-      {/* Anasayfa geri sayımı */}
-      <section className="mb-6 rounded-2xl border border-line bg-white/60 p-5">
-        <div className="mb-3 flex items-baseline justify-between gap-3">
-          <p className="text-sm text-ink-soft">Anasayfa geri sayımı</p>
-          <p className="font-display text-xl text-ink">
-            {settings.countdownEnabled ? "Açık" : "Kapalı"}
-          </p>
-        </div>
-        <form action={setCountdownAction} className="flex flex-col gap-3">
-          <div className="flex flex-wrap gap-4">
-            <label className="flex flex-col gap-1 text-xs text-ink-soft">
-              Kına tarihi
-              <input
-                type="date"
-                name="kina_date"
-                defaultValue={settings.countdownKinaDate ?? ""}
-                className="rounded-full border border-line bg-white px-4 py-2 text-sm text-ink outline-none focus:border-dusk-deep"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-xs text-ink-soft">
-              Düğün tarihi
-              <input
-                type="date"
-                name="dugun_date"
-                defaultValue={settings.countdownDugunDate ?? ""}
-                className="rounded-full border border-line bg-white px-4 py-2 text-sm text-ink outline-none focus:border-dusk-deep"
-              />
-            </label>
-          </div>
-          <div className="flex flex-wrap items-center gap-4">
-            <label className="flex items-center gap-2 text-sm text-ink-soft">
-              <input
-                type="checkbox"
-                name="enabled"
-                defaultChecked={settings.countdownEnabled}
-                className="h-4 w-4 accent-dusk-deep"
-              />
-              Anasayfada göster
-            </label>
-            <button className="rounded-full bg-dusk-deep px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90">
-              Kaydet
-            </button>
-          </div>
-        </form>
-      </section>
+      <AdminTabs active="gelenler" />
 
       {/* İstatistik + toplu indirme */}
       <section className="mb-8 rounded-2xl border border-line bg-white/60 p-5">

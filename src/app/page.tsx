@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { siteConfig } from "@/config/site";
 import { getSettings } from "@/lib/settings";
 import FloatingLeaves from "@/components/FloatingLeaves";
 import Countdown from "@/components/Countdown";
@@ -9,13 +8,12 @@ import { Monogram, Sprig } from "@/components/ornaments";
 export const revalidate = 60;
 
 export default async function Home() {
-  const { coupleNames, events } = siteConfig;
   const settings = await getSettings();
-  const mode = settings.mode;
-  const ev = events[mode];
-  const countdownLabel = mode === "kina" ? "Kınaya" : "Düğüne";
-  const countdownDate =
-    mode === "kina" ? settings.countdownKinaDate : settings.countdownDugunDate;
+  const { mode, brideName, groomName } = settings;
+  const ev = settings.events[mode];
+  const countdownLabel =
+    mode === "kina" ? "Kınaya" : mode === "nisan" ? "Nişana" : "Düğüne";
+  const countdownDate = settings.countdownDates[mode];
 
   return (
     <main className="relative flex min-h-dvh flex-col items-center justify-between overflow-hidden px-6 py-10 sm:py-12">
@@ -68,11 +66,7 @@ export default async function Home() {
         className="reveal flex flex-col items-center pt-2"
         style={{ animationDelay: "0.05s" }}
       >
-        <Monogram
-          left={coupleNames.bride[0]}
-          right={coupleNames.groom[0]}
-          variant="light"
-        />
+        <Monogram left={brideName[0]} right={groomName[0]} variant="light" />
         <p className="mt-3 text-center text-xs font-medium uppercase tracking-[0.35em] text-ivory/80 sm:text-sm">
           {ev.eyebrow}
         </p>
@@ -84,11 +78,11 @@ export default async function Home() {
           className="reveal text-center font-display text-6xl font-medium leading-none text-ivory [text-shadow:0_2px_28px_rgb(20_26_31_/_0.55)] sm:text-7xl md:text-8xl"
           style={{ animationDelay: "0.3s" }}
         >
-          {coupleNames.bride}
+          {brideName}
           <span className="mx-3 align-middle font-display text-4xl italic text-[#e7d0a2] sm:text-5xl">
             &amp;
           </span>
-          {coupleNames.groom}
+          {groomName}
         </h1>
 
         <div

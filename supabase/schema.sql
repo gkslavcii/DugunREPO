@@ -58,6 +58,20 @@ alter table public.app_settings
   add column if not exists countdown_kina_date date;
 alter table public.app_settings
   add column if not exists countdown_dugun_date date;
+alter table public.app_settings
+  add column if not exists countdown_nisan_date date;
+
+-- İçerik (admin panelinden düzenlenir; boşsa site.ts varsayılanına düşer)
+alter table public.app_settings add column if not exists bride_name text;
+alter table public.app_settings add column if not exists groom_name text;
+alter table public.app_settings add column if not exists kina_eyebrow text;
+alter table public.app_settings add column if not exists kina_welcome text;
+alter table public.app_settings add column if not exists dugun_eyebrow text;
+alter table public.app_settings add column if not exists dugun_welcome text;
+alter table public.app_settings add column if not exists nisan_eyebrow text;
+alter table public.app_settings add column if not exists nisan_welcome text;
+alter table public.app_settings add column if not exists andac_desc text;
+alter table public.app_settings add column if not exists foto_desc text;
 
 -- 5) Ziyaretler (kendi ziyaretçi sayacımız; cihaz başına 1 kez eklenir)
 create table if not exists public.visits (

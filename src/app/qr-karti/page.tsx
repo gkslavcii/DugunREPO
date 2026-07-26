@@ -1,12 +1,14 @@
-import { siteConfig } from "@/config/site";
+import { getSettings } from "@/lib/settings";
 import { Monogram, Sprig } from "@/components/ornaments";
+
+export const dynamic = "force-dynamic";
 
 /**
  * Baskıya hazır masa/giriş kartı.
  * Tarayıcıdan açıp "Yazdır → PDF olarak kaydet" ile kusursuz (vektörel) çıktı alınır.
  */
-export default function QrKartiPage() {
-  const { coupleNames } = siteConfig;
+export default async function QrKartiPage() {
+  const { brideName, groomName } = await getSettings();
 
   return (
     <main className="flex min-h-dvh items-center justify-center bg-ivory px-6 py-10 print:bg-white print:p-0">
@@ -16,15 +18,15 @@ export default function QrKartiPage() {
         <Sprig className="absolute right-4 top-5 h-5 w-14 -scale-x-100 text-sage/55" />
 
         <div className="flex flex-col items-center">
-          <Monogram left={coupleNames.bride[0]} right={coupleNames.groom[0]} />
+          <Monogram left={brideName[0]} right={groomName[0]} />
 
           <p className="mt-4 text-[10px] uppercase tracking-[0.35em] text-ink-soft">
             Düğünümüze Hoş Geldiniz
           </p>
           <h1 className="mt-2 font-display text-4xl leading-tight text-ink">
-            {coupleNames.bride}
+            {brideName}
             <span className="mx-1.5 italic text-dusk-deep">&amp;</span>
-            {coupleNames.groom}
+            {groomName}
           </h1>
 
           <div className="my-5 flex items-center gap-2">
