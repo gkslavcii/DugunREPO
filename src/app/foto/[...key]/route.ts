@@ -14,7 +14,10 @@ export async function GET(
 ) {
   const { key } = await params;
   const fullKey = key.join("/");
-  if (!fullKey.startsWith("fotograflar/")) {
+  if (
+    !fullKey.startsWith("fotograflar/") &&
+    !fullKey.startsWith("arkaplan/")
+  ) {
     return new Response("Not found", { status: 404 });
   }
 

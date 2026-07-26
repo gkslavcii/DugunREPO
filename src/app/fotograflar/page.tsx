@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { isAdmin } from "@/lib/auth";
-import { getSettings } from "@/lib/settings";
+import { getSettings, bgUrl } from "@/lib/settings";
 import { isR2Configured } from "@/lib/r2";
 import PhotoUploader from "@/components/PhotoUploader";
 import PhotoGallery from "@/components/PhotoGallery";
@@ -17,6 +17,7 @@ export default async function FotograflarPage() {
     brideName,
     groomName,
     fotoDesc,
+    backgroundKey,
     requirePhotoApproval: requireApproval,
   } = await getSettings();
 
@@ -42,7 +43,7 @@ export default async function FotograflarPage() {
 
   return (
     <main className="relative flex min-h-dvh flex-col items-center px-6 py-16 sm:py-20">
-      <DarkBackdrop />
+      <DarkBackdrop src={bgUrl(backgroundKey, 1200)} />
 
       <div
         className="reveal flex flex-col items-center"

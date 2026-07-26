@@ -1,14 +1,16 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { isAdmin } from "@/lib/auth";
-import { getSettings } from "@/lib/settings";
+import { getSettings, bgUrl } from "@/lib/settings";
 import AdminTabs from "@/components/AdminTabs";
+import BackgroundUploader from "@/components/BackgroundUploader";
 import {
   logoutAction,
   setModeAction,
   setPhotoApprovalAction,
   setCountdownAction,
   saveContentAction,
+  clearBackgroundAction,
 } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -63,6 +65,29 @@ export default async function AyarlarPage() {
               </button>
             </form>
           ))}
+        </div>
+      </section>
+
+      {/* Arka plan & paylaşım resmi */}
+      <section className="mb-6 rounded-2xl border border-line bg-white/60 p-5">
+        <p className="mb-3 text-sm text-ink-soft">Arka plan &amp; paylaşım resmi</p>
+        <div className="flex flex-wrap items-center gap-4">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={bgUrl(s.backgroundKey, 400)}
+            alt=""
+            className="h-24 w-40 rounded-xl object-cover ring-1 ring-line"
+          />
+          <div className="flex flex-col gap-2">
+            <BackgroundUploader />
+            {s.backgroundKey && (
+              <form action={clearBackgroundAction}>
+                <button className="text-xs text-ink-soft/70 underline-offset-2 transition hover:text-[#b56a60] hover:underline">
+                  Varsayılana dön
+                </button>
+              </form>
+            )}
+          </div>
         </div>
       </section>
 

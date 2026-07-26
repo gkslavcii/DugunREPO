@@ -2,7 +2,7 @@ import Link from "next/link";
 import AndacForm from "@/components/AndacForm";
 import VoiceRecorder from "@/components/VoiceRecorder";
 import DarkBackdrop from "@/components/DarkBackdrop";
-import { getSettings } from "@/lib/settings";
+import { getSettings, bgUrl } from "@/lib/settings";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { isR2Configured } from "@/lib/r2";
 import { Monogram, Sprig } from "@/components/ornaments";
@@ -17,7 +17,8 @@ type PublicNote = {
 };
 
 export default async function AndacPage() {
-  const { brideName, groomName, andacDesc } = await getSettings();
+  const { brideName, groomName, andacDesc, backgroundKey } =
+    await getSettings();
 
   const sb = getSupabaseAdmin();
   let publicNotes: PublicNote[] = [];
@@ -39,7 +40,7 @@ export default async function AndacPage() {
 
   return (
     <main className="relative flex min-h-dvh flex-col items-center px-6 py-16 sm:py-20">
-      <DarkBackdrop />
+      <DarkBackdrop src={bgUrl(backgroundKey, 1200)} />
 
       <div
         className="reveal flex flex-col items-center"

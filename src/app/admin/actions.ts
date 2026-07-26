@@ -9,8 +9,19 @@ import {
   setRequirePhotoApproval,
   setCountdown,
   setContent,
+  setBackground,
 } from "@/lib/settings";
+import { isR2Configured, newKey, presignPut, objectExists } from "@/lib/r2";
 import type { EventMode } from "@/config/site";
+
+const ALLOWED_BG = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+function revalidateContentPaths() {
+  revalidatePath("/");
+  revalidatePath("/andac");
+  revalidatePath("/fotograflar");
+  revalidatePath("/admin/ayarlar");
+}
 
 export type LoginState = { error: string } | null;
 
@@ -84,8 +95,35 @@ export async function saveContentAction(formData: FormData) {
     andac_desc: g("andac_desc"),
     foto_desc: g("foto_desc"),
   });
-  revalidatePath("/");
-  revalidatePath("/andac");
-  revalidatePath("/fotograflar");
-  revalidatePath("/admin/ayarlar");
+  revalidateContentPaths();
+}
+
+/** Admin'e arka plan resmi için imzalı yükleme adresi + anahtar verir. */
+export async function createBackgroundUploadUrl(
+  contentType: string,
+): Promise<{ url: string; key: string } | null> {
+  if (!(await isAdmin())) return null;
+  if (!isR2Configured()) return null;
+  if (!ALLOWED_BG.has(contentType)) return null;
+  const key = newKey(contentType, "arkaplan");
+  const url = await presignPut(key, contentType);
+  return { url, key };
+}
+
+/** Yükleme bitince arka planı ayarlar (önce R2'de var mı diye doğrular). */
+export async function registerBackground(
+  key: string,
+): Promise<{ ok: boolean }> {
+  if (!(await isAdmin())) return { ok: false };
+  if (!key.startsWith("arkaplan/")) return { ok: false };
+  if (!(await objectExists(key))) return { ok: false };
+  await setBackground(key);
+  revalidateContentPaths();
+  return { ok: true };
+}
+
+export async function clearBackgroundAction() {
+  if (!(await isAdmin())) return;
+  await setBackground(null);
+  revalidateContentPaths();
 }

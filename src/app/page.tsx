@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getSettings } from "@/lib/settings";
+import { getSettings, bgUrl } from "@/lib/settings";
 import FloatingLeaves from "@/components/FloatingLeaves";
 import Countdown from "@/components/Countdown";
 import VisitBeacon from "@/components/VisitBeacon";
@@ -26,7 +26,7 @@ export default async function Home() {
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/images/dans.jpg"
+          src={bgUrl(settings.backgroundKey, 1600)}
           alt=""
           className="h-full w-full object-cover object-[50%_30%]"
         />

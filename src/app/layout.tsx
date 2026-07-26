@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Mulish } from "next/font/google";
+import { getSettings } from "@/lib/settings";
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -17,12 +18,31 @@ const mulish = Mulish({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL("https://sezin-goksel-wedding.vercel.app"),
-  title: "Sezin & Göksel",
-  description:
-    "Düğünümüze hoş geldiniz — bu güzel günü birlikte ölümsüzleştirelim.",
-};
+const DESCRIPTION =
+  "Düğünümüze hoş geldiniz — bu güzel günü birlikte ölümsüzleştirelim.";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { brideName, groomName, backgroundKey } = await getSettings();
+  const title = `${brideName} & ${groomName}`;
+  const ogUrl = `/api/og?v=${encodeURIComponent(backgroundKey ?? "default")}`;
+  return {
+    metadataBase: new URL("https://sezin-goksel-wedding.vercel.app"),
+    title,
+    description: DESCRIPTION,
+    openGraph: {
+      title,
+      description: DESCRIPTION,
+      type: "website",
+      images: [{ url: ogUrl, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: DESCRIPTION,
+      images: [ogUrl],
+    },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#faf7f2",

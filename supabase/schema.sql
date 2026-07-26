@@ -72,6 +72,8 @@ alter table public.app_settings add column if not exists nisan_eyebrow text;
 alter table public.app_settings add column if not exists nisan_welcome text;
 alter table public.app_settings add column if not exists andac_desc text;
 alter table public.app_settings add column if not exists foto_desc text;
+-- Arka plan / paylaşım resmi (R2 anahtarı; boşsa /images/dans.jpg)
+alter table public.app_settings add column if not exists background_key text;
 
 -- 5) Ziyaretler (kendi ziyaretçi sayacımız; cihaz başına 1 kez eklenir)
 create table if not exists public.visits (

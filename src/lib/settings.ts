@@ -19,7 +19,13 @@ export type AppSettings = {
   requirePhotoApproval: boolean;
   countdownEnabled: boolean;
   countdownDates: Record<EventMode, string | null>;
+  backgroundKey: string | null;
 };
+
+/** Arka plan/paylaşım resmi URL'i (yüklenmişse R2 proxy'sinden, yoksa varsayılan). */
+export function bgUrl(key: string | null, w = 1600): string {
+  return key ? `/foto/${key}?w=${w}` : "/images/dans.jpg";
+}
 
 const DEFAULTS: AppSettings = {
   mode: siteConfig.mode,
@@ -35,6 +41,7 @@ const DEFAULTS: AppSettings = {
   requirePhotoApproval: false,
   countdownEnabled: false,
   countdownDates: { kina: null, nisan: null, dugun: null },
+  backgroundKey: null,
 };
 
 const MODES: EventMode[] = ["kina", "nisan", "dugun"];
@@ -88,6 +95,7 @@ export async function getSettings(): Promise<AppSettings> {
         nisan: date("countdown_nisan_date"),
         dugun: date("countdown_dugun_date"),
       },
+      backgroundKey: date("background_key"),
     };
   } catch {
     return DEFAULTS;
@@ -151,4 +159,8 @@ export type ContentFields = {
 
 export async function setContent(fields: ContentFields): Promise<void> {
   await patch(fields);
+}
+
+export async function setBackground(key: string | null): Promise<void> {
+  await patch({ background_key: key });
 }

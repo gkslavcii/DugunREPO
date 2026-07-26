@@ -6,7 +6,11 @@ import FloatingLeaves from "./FloatingLeaves";
  * Hafif fotoğraf + mürekkep perdesi + ışıltılar + doku + altın çerçeve.
  * `fixed` olduğundan uzun/kaydırılan sayfalarda da ekranı sarar; içerik üstünde akar.
  */
-export default function DarkBackdrop() {
+export default function DarkBackdrop({
+  src = "/images/dans.jpg",
+}: {
+  src?: string;
+}) {
   return (
     <>
       <div
@@ -15,7 +19,7 @@ export default function DarkBackdrop() {
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/images/dans.jpg"
+          src={src}
           alt=""
           className="h-full w-full scale-110 object-cover opacity-[0.12] blur-2xl"
         />

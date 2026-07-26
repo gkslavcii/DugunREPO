@@ -1,5 +1,5 @@
-// Sosyal paylasim (Open Graph) gorselini uretir: src/app/opengraph-image.jpg
-// Link WhatsApp/Instagram'da paylasilinca cikan kapak gorseli.
+// Varsayilan sosyal paylasim (Open Graph) gorseli: public/images/og.jpg
+// Admin bir arka plan yuklemediyse /api/og bunu dondurur.
 // Kullanim: node scripts/og-uret.mjs
 
 import sharp from "sharp";
@@ -7,6 +7,6 @@ import sharp from "sharp";
 await sharp("public/images/dans.jpg")
   .resize(1200, 630, { fit: "cover", position: sharp.strategy.attention })
   .jpeg({ quality: 85 })
-  .toFile("src/app/opengraph-image.jpg");
+  .toFile("public/images/og.jpg");
 
-console.log("OG gorseli olusturuldu -> src/app/opengraph-image.jpg");
+console.log("Varsayilan OG gorseli olusturuldu -> public/images/og.jpg");
