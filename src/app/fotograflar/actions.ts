@@ -35,20 +35,22 @@ export async function createUploadUrl(
 
 /** Yükleme bitince fotoğrafı kaydeder (önce R2'de var mı diye doğrular).
  * Onay istenmişse approved=false (beklemede) gelir; aksi halde direkt yayında. */
-export async function registerPhoto(key: string): Promise<{ ok: boolean }> {
+export async function registerPhoto(
+  key: string,
+): Promise<{ ok: boolean; pending: boolean }> {
   const sb = getSupabaseAdmin();
-  if (!sb || !isR2Configured()) return { ok: false };
-  if (!key.startsWith("fotograflar/")) return { ok: false };
-  if (!(await objectExists(key))) return { ok: false };
+  if (!sb || !isR2Configured()) return { ok: false, pending: false };
+  if (!key.startsWith("fotograflar/")) return { ok: false, pending: false };
+  if (!(await objectExists(key))) return { ok: false, pending: false };
 
   const needsApproval = await requirePhotoApproval();
   const { error } = await sb
     .from("photos")
     .insert({ key, url: publicUrl(key), approved: !needsApproval });
-  if (error) return { ok: false };
+  if (error) return { ok: false, pending: false };
 
   revalidatePath("/fotograflar");
-  return { ok: true };
+  return { ok: true, pending: needsApproval };
 }
 
 /** Yalnızca yönetici: beklemedeki fotoğrafı onaylar (yayına alır). */

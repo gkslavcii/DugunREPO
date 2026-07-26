@@ -4,7 +4,7 @@
 
 import sharp from "sharp";
 
-await sharp("public/images/couple-original.jpeg")
+await sharp("public/images/dans.jpg")
   .resize(1200, 630, { fit: "cover", position: sharp.strategy.attention })
   .jpeg({ quality: 85 })
   .toFile("src/app/opengraph-image.jpg");

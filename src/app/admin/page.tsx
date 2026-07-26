@@ -202,10 +202,6 @@ export default async function AdminPage() {
               Kaydet
             </button>
           </div>
-          <p className="text-xs text-ink-soft/70">
-            Üstteki moda göre (Kına/Düğün) ilgili tarihe kalan gün anasayfada
-            gösterilir.
-          </p>
         </form>
       </section>
 

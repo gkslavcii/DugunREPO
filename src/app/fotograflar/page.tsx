@@ -2,6 +2,7 @@ import Link from "next/link";
 import { siteConfig } from "@/config/site";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { isAdmin } from "@/lib/auth";
+import { requirePhotoApproval } from "@/lib/settings";
 import { isR2Configured } from "@/lib/r2";
 import PhotoUploader from "@/components/PhotoUploader";
 import PhotoGallery from "@/components/PhotoGallery";
@@ -34,6 +35,7 @@ export default async function FotograflarPage() {
 
   const admin = await isAdmin();
   const ready = isR2Configured();
+  const requireApproval = await requirePhotoApproval();
 
   return (
     <main className="relative flex min-h-dvh flex-col items-center px-6 py-16 sm:py-20">
@@ -66,7 +68,7 @@ export default async function FotograflarPage() {
       </div>
 
       {ready ? (
-        <PhotoUploader />
+        <PhotoUploader requireApproval={requireApproval} />
       ) : (
         <p className="rounded-xl bg-[#b56a60]/10 px-4 py-3 text-center text-sm text-[#b56a60]">
           Fotoğraf yükleme henüz yapılandırılmadı.

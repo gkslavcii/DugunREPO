@@ -5,7 +5,11 @@ import { useRouter } from "next/navigation";
 import { createUploadUrl, registerPhoto } from "@/app/fotograflar/actions";
 import Petals from "./Petals";
 
-export default function PhotoUploader() {
+export default function PhotoUploader({
+  requireApproval = false,
+}: {
+  requireApproval?: boolean;
+}) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -27,6 +31,7 @@ export default function PhotoUploader() {
 
     let ok = 0;
     let fail = 0;
+    let anyPending = false;
 
     for (const file of files) {
       try {
@@ -45,8 +50,10 @@ export default function PhotoUploader() {
             });
             if (put.ok) {
               const reg = await registerPhoto(res.key);
-              if (reg.ok) ok++;
-              else fail++;
+              if (reg.ok) {
+                ok++;
+                if (reg.pending) anyPending = true;
+              } else fail++;
             } else {
               fail++;
             }
@@ -61,7 +68,9 @@ export default function PhotoUploader() {
     setBusy(false);
     setStatus(
       fail === 0
-        ? `${ok} fotoğraf yüklendi, teşekkürler! 💛`
+        ? anyPending
+          ? `${ok} fotoğraf alındı · onaylandıktan sonra galeride görünecek 💛`
+          : `${ok} fotoğraf yüklendi, teşekkürler! 💛`
         : `${ok} yüklendi, ${fail} yüklenemedi.`,
     );
     if (ok > 0) setCelebrate((c) => c + 1);
@@ -89,7 +98,9 @@ export default function PhotoUploader() {
         {busy ? `Yükleniyor… ${done}/${total}` : "Fotoğraf Seç ve Yükle"}
       </button>
       <p className="text-center text-xs text-ivory/60">
-        Birden fazla seçebilirsin · yüklenenler herkese açık galeride görünür
+        {requireApproval
+          ? "Birden fazla seçebilirsin · yüklenenler onaylandığında herkese açık galeride görünür"
+          : "Birden fazla seçebilirsin · yüklenenler herkese açık galeride görünür"}
       </p>
       {status && (
         <p className="text-center text-sm font-medium text-[#e7d0a2]">
