@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { isAdmin } from "@/lib/auth";
-import { getTables, getSeatGuests, getSeatEdges } from "@/lib/seating";
+import {
+  getTables,
+  getSeatGuests,
+  getSeatEdges,
+  getSeatStart,
+} from "@/lib/seating";
+import { getSettings } from "@/lib/settings";
 import AdminTabs from "@/components/AdminTabs";
 import SeatingEditor from "@/components/SeatingEditor";
 import { logoutAction } from "../actions";
@@ -10,10 +16,12 @@ export const dynamic = "force-dynamic";
 
 export default async function OturmaPage() {
   if (!(await isAdmin())) redirect("/admin");
-  const [tables, guests, edges] = await Promise.all([
+  const [tables, guests, edges, start, settings] = await Promise.all([
     getTables(),
     getSeatGuests(),
     getSeatEdges(),
+    getSeatStart(),
+    getSettings(),
   ]);
 
   return (
@@ -38,14 +46,24 @@ export default async function OturmaPage() {
         initialTables={tables}
         initialGuests={guests}
         initialEdges={edges}
+        initialPublic={settings.seatingPublic}
+        initialStart={start}
       />
 
-      <Link
-        href="/"
-        className="mt-6 inline-block text-sm text-ink-soft underline-offset-4 transition hover:text-ink hover:underline"
-      >
-        ← Ana sayfa
-      </Link>
+      <div className="mt-6 flex items-center gap-4">
+        <Link
+          href="/admin/oturma/yazdir"
+          className="rounded-full border border-ink/15 px-4 py-2 text-sm text-ink transition hover:bg-ink/[0.04]"
+        >
+          📄 Listeyi yazdır
+        </Link>
+        <Link
+          href="/"
+          className="text-sm text-ink-soft underline-offset-4 transition hover:text-ink hover:underline"
+        >
+          ← Ana sayfa
+        </Link>
+      </div>
     </main>
   );
 }

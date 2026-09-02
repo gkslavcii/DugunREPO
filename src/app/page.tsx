@@ -11,7 +11,8 @@ export const revalidate = 60;
 
 export default async function Home() {
   const settings = await getSettings();
-  const hasSeating = (await getTables()).length > 0;
+  const showSeat =
+    settings.seatingPublic && (await getTables()).length > 0;
   const { mode, brideName, groomName } = settings;
   const ev = settings.events[mode];
   const countdownLabel =
@@ -21,7 +22,7 @@ export default async function Home() {
   return (
     <main className="relative flex min-h-dvh flex-col items-center justify-between overflow-hidden px-6 py-10 sm:py-12">
       <VisitBeacon />
-      {hasSeating && <SeatButton />}
+      {showSeat && <SeatButton />}
 
       {/* sinematik fotoğraf arka planı (bg-ink → foto gelmese de zemin koyu kalır) */}
       <div

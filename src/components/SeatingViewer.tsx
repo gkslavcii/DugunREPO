@@ -24,9 +24,11 @@ type Pan = { id: number; sx: number; sy: number; ox: number; oy: number } | null
 export default function SeatingViewer({
   tables,
   edges,
+  start,
 }: {
   tables: Table[];
   edges: SeatEdges;
+  start: { x: number; y: number } | null;
 }) {
   const [view, setView] = useState({ x: 0, y: 0, scale: 1 });
   const [query, setQuery] = useState("");
@@ -255,6 +257,27 @@ export default function SeatingViewer({
             transformOrigin: "0 0",
           }}
         >
+          {start && highTable && (
+            <svg
+              className="pointer-events-none absolute left-0 top-0 overflow-visible"
+              style={{ width: 0, height: 0 }}
+              aria-hidden
+            >
+              <line
+                x1={start.x}
+                y1={start.y}
+                x2={highTable.x}
+                y2={highTable.y}
+                stroke="#6f97ad"
+                strokeWidth={3}
+                strokeLinecap="round"
+                strokeDasharray="2 10"
+                vectorEffect="non-scaling-stroke"
+                className="seat-path"
+              />
+            </svg>
+          )}
+
           {tables.map((t) => {
             const { w, h } = tableSize(t.shape, t.capacity);
             const chairs = chairPositions(t.shape, t.capacity);
@@ -312,6 +335,25 @@ export default function SeatingViewer({
               </div>
             );
           })}
+
+          {start && (
+            <div
+              className="absolute"
+              style={{ left: start.x, top: start.y, width: 0, height: 0 }}
+            >
+              <div
+                className="absolute flex flex-col items-center"
+                style={{ transform: "translate(-50%, -50%)" }}
+              >
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-dusk-deep text-sm shadow-md">
+                  🚪
+                </div>
+                <span className="mt-0.5 whitespace-nowrap rounded bg-ink/75 px-1.5 py-0.5 text-[9px] font-medium text-ivory">
+                  Giriş
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         {edges.top && (

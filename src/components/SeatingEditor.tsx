@@ -19,14 +19,19 @@ import {
   type Table,
 } from "@/lib/seatingLayout";
 import {
-  addGuest,
+  addGuests,
+  clearStartMark,
   createTable,
   deleteTable,
   removeGuest,
   setSeatEdges,
+  setSeatingPublicAction,
+  setStartMark,
   updateTable,
   updateTablePosition,
 } from "@/app/admin/oturma/actions";
+
+type Pt = { x: number; y: number };
 
 type Gesture =
   | { type: "pan"; id: number; sx: number; sy: number; ox: number; oy: number }
@@ -38,6 +43,15 @@ type Gesture =
       tid: string;
       otx: number;
       oty: number;
+      moved: boolean;
+    }
+  | {
+      type: "start";
+      id: number;
+      sx: number;
+      sy: number;
+      ox: number;
+      oy: number;
       moved: boolean;
     }
   | null;
@@ -54,10 +68,14 @@ export default function SeatingEditor({
   initialTables,
   initialGuests,
   initialEdges,
+  initialPublic,
+  initialStart,
 }: {
   initialTables: Table[];
   initialGuests: SeatGuest[];
   initialEdges: SeatEdges;
+  initialPublic: boolean;
+  initialStart: Pt | null;
 }) {
   const [tables, setTables] = useState<Table[]>(initialTables);
   const [guests, setGuests] = useState<SeatGuest[]>(initialGuests);
@@ -67,7 +85,14 @@ export default function SeatingEditor({
   const [newCap, setNewCap] = useState(8);
   const [edges, setEdges] = useState<SeatEdges>(initialEdges);
   const [guestName, setGuestName] = useState("");
+  const [pub, setPub] = useState(initialPublic);
+  const [start, setStart] = useState<Pt | null>(initialStart);
   const [busy, setBusy] = useState(false);
+
+  const startRef = useRef<Pt | null>(start);
+  useEffect(() => {
+    startRef.current = start;
+  }, [start]);
 
   const vpRef = useRef<HTMLDivElement>(null);
   const gestureRef = useRef<Gesture>(null);
@@ -156,6 +181,20 @@ export default function SeatingEditor({
       return;
     }
 
+    if ((e.target as HTMLElement).closest("[data-start]") && startRef.current) {
+      const s = startRef.current;
+      gestureRef.current = {
+        type: "start",
+        id: e.pointerId,
+        sx: e.clientX,
+        sy: e.clientY,
+        ox: s.x,
+        oy: s.y,
+        moved: false,
+      };
+      return;
+    }
+
     const tableEl = (e.target as HTMLElement).closest(
       "[data-table-id]",
     ) as HTMLElement | null;
@@ -220,7 +259,7 @@ export default function SeatingEditor({
         x: g.ox + (e.clientX - g.sx),
         y: g.oy + (e.clientY - g.sy),
       }));
-    } else {
+    } else if (g.type === "drag") {
       if (Math.abs(e.clientX - g.sx) + Math.abs(e.clientY - g.sy) > 3)
         g.moved = true;
       const dx = (e.clientX - g.sx) / view.scale;
@@ -230,6 +269,12 @@ export default function SeatingEditor({
           t.id === g.tid ? { ...t, x: g.otx + dx, y: g.oty + dy } : t,
         ),
       );
+    } else if (g.type === "start") {
+      if (Math.abs(e.clientX - g.sx) + Math.abs(e.clientY - g.sy) > 3)
+        g.moved = true;
+      const dx = (e.clientX - g.sx) / view.scale;
+      const dy = (e.clientY - g.sy) / view.scale;
+      setStart({ x: g.ox + dx, y: g.oy + dy });
     }
   }
 
@@ -243,6 +288,9 @@ export default function SeatingEditor({
         const cur = tablesRef.current.find((t) => t.id === g.tid);
         if (cur)
           updateTablePosition(g.tid, Math.round(cur.x), Math.round(cur.y));
+      } else if (g.type === "start" && g.moved) {
+        const s = startRef.current;
+        if (s) setStartMark(Math.round(s.x), Math.round(s.y));
       }
     }
   }
@@ -281,12 +329,38 @@ export default function SeatingEditor({
     await deleteTable(id);
   }
 
-  async function onAddGuest() {
-    const name = guestName.trim();
-    if (!name || !selectedId) return;
+  async function onAddGuests() {
+    const names = guestName
+      .split(/[\n,;]+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (!names.length || !selectedId) return;
     setGuestName("");
-    const g = await addGuest(selectedId, name);
-    if (g) setGuests((gs) => [...gs, g]);
+    const gs = await addGuests(selectedId, names);
+    if (gs.length) setGuests((prev) => [...prev, ...gs]);
+  }
+
+  function togglePublic() {
+    const next = !pub;
+    setPub(next);
+    setSeatingPublicAction(next);
+  }
+
+  function placeStart() {
+    const el = vpRef.current;
+    const cx = el ? el.clientWidth / 2 : 200;
+    const cy = el ? el.clientHeight / 2 : 200;
+    const p = {
+      x: Math.round((cx - view.x) / view.scale),
+      y: Math.round((cy - view.y) / view.scale),
+    };
+    setStart(p);
+    setStartMark(p.x, p.y);
+  }
+
+  function removeStart() {
+    setStart(null);
+    clearStartMark();
   }
 
   async function onRemoveGuest(id: string) {
@@ -372,6 +446,38 @@ export default function SeatingEditor({
             +
           </button>
         </div>
+      </div>
+
+      {/* misafirlere aç/kapat + giriş noktası */}
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={togglePublic}
+          className={`rounded-full px-4 py-1.5 text-xs font-medium transition ${
+            pub
+              ? "bg-sage text-white"
+              : "border border-line text-ink-soft hover:bg-ink/[0.04]"
+          }`}
+        >
+          Misafirlere: {pub ? "Açık" : "Kapalı"}
+        </button>
+        {start ? (
+          <button
+            type="button"
+            onClick={removeStart}
+            className="rounded-full border border-line px-4 py-1.5 text-xs text-ink-soft transition hover:bg-ink/[0.04]"
+          >
+            🚪 Giriş noktasını kaldır
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={placeStart}
+            className="rounded-full border border-line px-4 py-1.5 text-xs text-ink transition hover:bg-ink/[0.04]"
+          >
+            🚪 Giriş noktası koy
+          </button>
+        )}
       </div>
 
       {/* kenar yön etiketleri */}
@@ -470,6 +576,26 @@ export default function SeatingEditor({
               </div>
             );
           })}
+
+          {start && (
+            <div
+              data-start
+              className="absolute cursor-grab active:cursor-grabbing"
+              style={{ left: start.x, top: start.y, width: 0, height: 0 }}
+            >
+              <div
+                className="absolute flex flex-col items-center"
+                style={{ transform: "translate(-50%, -50%)" }}
+              >
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-dusk-deep text-sm shadow-md">
+                  🚪
+                </div>
+                <span className="mt-0.5 whitespace-nowrap rounded bg-ink/75 px-1.5 py-0.5 text-[9px] font-medium text-ivory">
+                  Giriş
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         {edges.top && (
@@ -579,24 +705,18 @@ export default function SeatingEditor({
                 </span>
               ))}
             </div>
-            <div className="mt-2 flex gap-2">
-              <input
+            <div className="mt-2 flex items-start gap-2">
+              <textarea
                 value={guestName}
                 onChange={(e) => setGuestName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    onAddGuest();
-                  }
-                }}
-                placeholder="Misafir adı ekle"
-                maxLength={60}
-                className="flex-1 rounded-full border border-line bg-white px-4 py-1.5 text-sm text-ink outline-none focus:border-dusk-deep"
+                rows={2}
+                placeholder="İsim(ler) — her satıra bir tane; listeyi de yapıştırabilirsin"
+                className="flex-1 resize-none rounded-xl border border-line bg-white px-4 py-2 text-sm text-ink outline-none focus:border-dusk-deep"
               />
               <button
                 type="button"
-                onClick={onAddGuest}
-                className="rounded-full bg-ink px-4 py-1.5 text-sm font-medium text-ivory transition hover:opacity-90"
+                onClick={onAddGuests}
+                className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-ivory transition hover:opacity-90"
               >
                 Ekle
               </button>

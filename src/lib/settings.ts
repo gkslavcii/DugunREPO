@@ -20,6 +20,7 @@ export type AppSettings = {
   countdownEnabled: boolean;
   countdownDates: Record<EventMode, string | null>;
   backgroundKey: string | null;
+  seatingPublic: boolean;
 };
 
 /** Arka plan/paylaşım resmi URL'i (yüklenmişse R2 proxy'sinden, yoksa varsayılan). */
@@ -42,6 +43,7 @@ const DEFAULTS: AppSettings = {
   countdownEnabled: false,
   countdownDates: { kina: null, nisan: null, dugun: null },
   backgroundKey: null,
+  seatingPublic: false,
 };
 
 const MODES: EventMode[] = ["kina", "nisan", "dugun"];
@@ -96,6 +98,7 @@ export async function getSettings(): Promise<AppSettings> {
         dugun: date("countdown_dugun_date"),
       },
       backgroundKey: date("background_key"),
+      seatingPublic: Boolean(row.seating_public),
     };
   } catch {
     return DEFAULTS;
@@ -163,4 +166,15 @@ export async function setContent(fields: ContentFields): Promise<void> {
 
 export async function setBackground(key: string | null): Promise<void> {
   await patch({ background_key: key });
+}
+
+export async function setSeatingPublic(value: boolean): Promise<void> {
+  await patch({ seating_public: value });
+}
+
+export async function setSeatStart(
+  x: number | null,
+  y: number | null,
+): Promise<void> {
+  await patch({ seat_start_x: x, seat_start_y: y });
 }

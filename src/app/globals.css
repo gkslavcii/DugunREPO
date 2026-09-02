@@ -112,3 +112,18 @@ body {
     opacity: 0;
   }
 }
+
+/* Oturma haritası: başlangıçtan masaya yürüyen nokta rotası */
+@keyframes seatPath {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+.seat-path {
+  animation: seatPath 0.8s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .seat-path {
+    animation: none;
+  }
+}

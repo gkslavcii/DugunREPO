@@ -108,3 +108,8 @@ alter table public.app_settings add column if not exists seat_edge_top text;
 alter table public.app_settings add column if not exists seat_edge_right text;
 alter table public.app_settings add column if not exists seat_edge_bottom text;
 alter table public.app_settings add column if not exists seat_edge_left text;
+
+-- Oturma: misafir aramayı aç/kapat + başlangıç (giriş) noktası
+alter table public.app_settings add column if not exists seating_public boolean not null default false;
+alter table public.app_settings add column if not exists seat_start_x double precision;
+alter table public.app_settings add column if not exists seat_start_y double precision;

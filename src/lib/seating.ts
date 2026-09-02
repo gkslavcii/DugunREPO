@@ -52,6 +52,25 @@ export async function getSeatGuests(): Promise<SeatGuest[]> {
   }
 }
 
+export async function getSeatStart(): Promise<{ x: number; y: number } | null> {
+  const sb = getSupabaseAdmin();
+  if (!sb) return null;
+  try {
+    const { data } = await sb
+      .from("app_settings")
+      .select("seat_start_x, seat_start_y")
+      .eq("id", 1)
+      .single();
+    if (!data) return null;
+    const r = data as Record<string, unknown>;
+    if (typeof r.seat_start_x === "number" && typeof r.seat_start_y === "number")
+      return { x: r.seat_start_x, y: r.seat_start_y };
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export async function getSeatEdges(): Promise<SeatEdges> {
   const sb = getSupabaseAdmin();
   if (!sb) return EMPTY_EDGES;

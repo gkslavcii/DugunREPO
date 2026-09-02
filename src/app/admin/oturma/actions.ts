@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { isAdmin } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { setSeatingPublic, setSeatStart } from "@/lib/settings";
 import {
   SHAPES,
   normShape,
@@ -119,6 +120,35 @@ export async function addGuest(
   }
 }
 
+export async function addGuests(
+  tableId: string,
+  names: string[],
+): Promise<SeatGuest[]> {
+  if (!(await isAdmin())) return [];
+  const sb = getSupabaseAdmin();
+  if (!sb || !tableId) return [];
+  const clean = names
+    .map((n) => (n ?? "").trim().slice(0, 60))
+    .filter(Boolean)
+    .slice(0, 60);
+  if (clean.length === 0) return [];
+  try {
+    const { data, error } = await sb
+      .from("seat_guests")
+      .insert(clean.map((name) => ({ table_id: tableId, name })))
+      .select("id, name, table_id");
+    if (error || !data) return [];
+    revalidatePath("/admin/oturma");
+    return (data as Record<string, unknown>[]).map((r) => ({
+      id: String(r.id),
+      name: typeof r.name === "string" ? r.name : "",
+      tableId,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export async function removeGuest(id: string): Promise<void> {
   if (!(await isAdmin())) return;
   const sb = getSupabaseAdmin();
@@ -153,5 +183,24 @@ export async function setSeatEdges(edges: {
   } catch {
     /* sessizce geç */
   }
+  revalidatePath("/admin/oturma");
+}
+
+export async function setSeatingPublicAction(value: boolean): Promise<void> {
+  if (!(await isAdmin())) return;
+  await setSeatingPublic(value);
+  revalidatePath("/");
+  revalidatePath("/oturma");
+  revalidatePath("/admin/oturma");
+}
+
+export async function setStartMark(x: number, y: number): Promise<void> {
+  if (!(await isAdmin())) return;
+  await setSeatStart(Math.round(x), Math.round(y));
+}
+
+export async function clearStartMark(): Promise<void> {
+  if (!(await isAdmin())) return;
+  await setSeatStart(null, null);
   revalidatePath("/admin/oturma");
 }
