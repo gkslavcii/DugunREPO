@@ -81,3 +81,30 @@ create table if not exists public.visits (
   created_at timestamptz not null default now()
 );
 alter table public.visits enable row level security;
+
+-- 6) Oturma planı: masalar
+create table if not exists public.seat_tables (
+  id         uuid primary key default gen_random_uuid(),
+  name       text not null default '',
+  shape      text not null default 'round',   -- 'round' | 'square' | 'rect'
+  capacity   int  not null default 8,
+  x          double precision not null default 0,
+  y          double precision not null default 0,
+  created_at timestamptz not null default now()
+);
+alter table public.seat_tables enable row level security;
+
+-- 7) Oturma planı: masaya atanan misafirler
+create table if not exists public.seat_guests (
+  id         uuid primary key default gen_random_uuid(),
+  name       text not null,
+  table_id   uuid references public.seat_tables(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+alter table public.seat_guests enable row level security;
+
+-- Kenar yön etiketleri (deniz / sahil / bina vb.)
+alter table public.app_settings add column if not exists seat_edge_top text;
+alter table public.app_settings add column if not exists seat_edge_right text;
+alter table public.app_settings add column if not exists seat_edge_bottom text;
+alter table public.app_settings add column if not exists seat_edge_left text;

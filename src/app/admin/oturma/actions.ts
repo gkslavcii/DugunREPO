@@ -1,0 +1,116 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { isAdmin } from "@/lib/auth";
+import { getSupabaseAdmin } from "@/lib/supabase";
+import { SHAPES, normShape, type Shape, type Table } from "@/lib/seatingLayout";
+
+const clampCap = (n: number) => Math.min(20, Math.max(1, Math.round(n)));
+
+export async function createTable(
+  shape: string,
+  capacity: number,
+  x: number,
+  y: number,
+): Promise<Table | null> {
+  if (!(await isAdmin())) return null;
+  const sb = getSupabaseAdmin();
+  if (!sb) return null;
+  const sh = normShape(shape);
+  const cap = clampCap(capacity);
+  try {
+    const { data, error } = await sb
+      .from("seat_tables")
+      .insert({ shape: sh, capacity: cap, x, y, name: "" })
+      .select("id, name, shape, capacity, x, y")
+      .single();
+    if (error || !data) return null;
+    revalidatePath("/admin/oturma");
+    const r = data as Record<string, unknown>;
+    return {
+      id: String(r.id),
+      name: "",
+      shape: sh,
+      capacity: cap,
+      x: typeof r.x === "number" ? r.x : x,
+      y: typeof r.y === "number" ? r.y : y,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** Sürükleme bitince konumu kaydeder (sık çağrılır; sayfa force-dynamic olduğu için revalidate gerekmez). */
+export async function updateTablePosition(
+  id: string,
+  x: number,
+  y: number,
+): Promise<void> {
+  if (!(await isAdmin())) return;
+  const sb = getSupabaseAdmin();
+  if (!sb || !id) return;
+  try {
+    await sb.from("seat_tables").update({ x, y }).eq("id", id);
+  } catch {
+    /* sessizce geç */
+  }
+}
+
+export async function updateTable(
+  id: string,
+  fields: { name?: string; shape?: string; capacity?: number },
+): Promise<void> {
+  if (!(await isAdmin())) return;
+  const sb = getSupabaseAdmin();
+  if (!sb || !id) return;
+  const patch: Record<string, unknown> = {};
+  if (typeof fields.name === "string") patch.name = fields.name.slice(0, 40);
+  if (fields.shape && SHAPES.includes(fields.shape as Shape))
+    patch.shape = fields.shape;
+  if (typeof fields.capacity === "number")
+    patch.capacity = clampCap(fields.capacity);
+  if (Object.keys(patch).length === 0) return;
+  try {
+    await sb.from("seat_tables").update(patch).eq("id", id);
+  } catch {
+    /* sessizce geç */
+  }
+  revalidatePath("/admin/oturma");
+}
+
+export async function deleteTable(id: string): Promise<void> {
+  if (!(await isAdmin())) return;
+  const sb = getSupabaseAdmin();
+  if (!sb || !id) return;
+  try {
+    await sb.from("seat_tables").delete().eq("id", id);
+  } catch {
+    /* sessizce geç */
+  }
+  revalidatePath("/admin/oturma");
+}
+
+export async function setSeatEdges(edges: {
+  top: string;
+  right: string;
+  bottom: string;
+  left: string;
+}): Promise<void> {
+  if (!(await isAdmin())) return;
+  const sb = getSupabaseAdmin();
+  if (!sb) return;
+  const clean = (s: string) => (s ?? "").trim().slice(0, 30) || null;
+  try {
+    await sb.from("app_settings").upsert({
+      id: 1,
+      seat_edge_top: clean(edges.top),
+      seat_edge_right: clean(edges.right),
+      seat_edge_bottom: clean(edges.bottom),
+      seat_edge_left: clean(edges.left),
+      updated_at: new Date().toISOString(),
+    });
+  } catch {
+    /* sessizce geç */
+  }
+  revalidatePath("/admin/oturma");
+}
