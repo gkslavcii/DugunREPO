@@ -1,5 +1,10 @@
 import { getSupabaseAdmin } from "./supabase";
-import { normShape, type Table, type SeatEdges } from "./seatingLayout";
+import {
+  normShape,
+  type Table,
+  type SeatEdges,
+  type SeatGuest,
+} from "./seatingLayout";
 
 const EMPTY_EDGES: SeatEdges = {
   top: null,
@@ -23,6 +28,24 @@ export async function getTables(): Promise<Table[]> {
       capacity: typeof r.capacity === "number" ? r.capacity : 8,
       x: typeof r.x === "number" ? r.x : 0,
       y: typeof r.y === "number" ? r.y : 0,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function getSeatGuests(): Promise<SeatGuest[]> {
+  const sb = getSupabaseAdmin();
+  if (!sb) return [];
+  try {
+    const { data } = await sb
+      .from("seat_guests")
+      .select("id, name, table_id")
+      .order("created_at", { ascending: true });
+    return ((data as Record<string, unknown>[]) ?? []).map((r) => ({
+      id: String(r.id),
+      name: typeof r.name === "string" ? r.name : "",
+      tableId: r.table_id ? String(r.table_id) : null,
     }));
   } catch {
     return [];

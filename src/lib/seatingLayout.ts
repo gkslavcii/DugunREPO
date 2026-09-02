@@ -20,6 +20,66 @@ export type SeatEdges = {
   left: string | null;
 };
 
+export type SeatGuest = {
+  id: string;
+  name: string;
+  tableId: string | null;
+};
+
+export type View = { x: number; y: number; scale: number };
+
+export const MIN_SCALE = 0.3;
+export const MAX_SCALE = 3;
+
+export function clampScale(s: number): number {
+  return Math.min(MAX_SCALE, Math.max(MIN_SCALE, s));
+}
+
+/** Bir noktayı sabit tutarak (imleç/pinch merkezi) yakınlaştırır. */
+export function zoomAtPoint(
+  v: View,
+  cx: number,
+  cy: number,
+  factor: number,
+): View {
+  const ns = clampScale(v.scale * factor);
+  const wx = (cx - v.x) / v.scale;
+  const wy = (cy - v.y) / v.scale;
+  return { x: cx - wx * ns, y: cy - wy * ns, scale: ns };
+}
+
+/** Tüm masaları görünür alana ortalayacak görünümü hesaplar. */
+export function fitView(
+  tables: Table[],
+  vpW: number,
+  vpH: number,
+): View {
+  if (tables.length === 0 || vpW <= 0 || vpH <= 0) {
+    return { x: vpW / 2, y: vpH / 2, scale: 1 };
+  }
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity;
+  for (const t of tables) {
+    const { w, h } = tableSize(t.shape, t.capacity);
+    const pad = Math.max(w, h) / 2 + 28; // sandalyeler dahil
+    minX = Math.min(minX, t.x - pad);
+    minY = Math.min(minY, t.y - pad);
+    maxX = Math.max(maxX, t.x + pad);
+    maxY = Math.max(maxY, t.y + pad);
+  }
+  const cw = Math.max(1, maxX - minX);
+  const ch = Math.max(1, maxY - minY);
+  const margin = 48;
+  const scale = clampScale(
+    Math.min((vpW - margin) / cw, (vpH - margin) / ch, 1.4),
+  );
+  const ccx = (minX + maxX) / 2;
+  const ccy = (minY + maxY) / 2;
+  return { x: vpW / 2 - ccx * scale, y: vpH / 2 - ccy * scale, scale };
+}
+
 export const SHAPES: Shape[] = ["round", "square", "rect"];
 
 export function normShape(s: unknown): Shape {

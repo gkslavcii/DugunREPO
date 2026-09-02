@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { isAdmin } from "@/lib/auth";
-import { getTables, getSeatEdges } from "@/lib/seating";
+import { getTables, getSeatGuests, getSeatEdges } from "@/lib/seating";
 import AdminTabs from "@/components/AdminTabs";
 import SeatingEditor from "@/components/SeatingEditor";
 import { logoutAction } from "../actions";
@@ -10,7 +10,11 @@ export const dynamic = "force-dynamic";
 
 export default async function OturmaPage() {
   if (!(await isAdmin())) redirect("/admin");
-  const [tables, edges] = await Promise.all([getTables(), getSeatEdges()]);
+  const [tables, guests, edges] = await Promise.all([
+    getTables(),
+    getSeatGuests(),
+    getSeatEdges(),
+  ]);
 
   return (
     <main className="mx-auto min-h-dvh w-full max-w-4xl px-4 py-10 sm:px-6">
@@ -30,7 +34,11 @@ export default async function OturmaPage() {
 
       <AdminTabs active="oturma" />
 
-      <SeatingEditor initialTables={tables} initialEdges={edges} />
+      <SeatingEditor
+        initialTables={tables}
+        initialGuests={guests}
+        initialEdges={edges}
+      />
 
       <Link
         href="/"

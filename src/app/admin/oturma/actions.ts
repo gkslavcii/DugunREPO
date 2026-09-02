@@ -3,7 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { isAdmin } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { SHAPES, normShape, type Shape, type Table } from "@/lib/seatingLayout";
+import {
+  SHAPES,
+  normShape,
+  type Shape,
+  type Table,
+  type SeatGuest,
+} from "@/lib/seatingLayout";
 
 const clampCap = (n: number) => Math.min(20, Math.max(1, Math.round(n)));
 
@@ -84,6 +90,41 @@ export async function deleteTable(id: string): Promise<void> {
   if (!sb || !id) return;
   try {
     await sb.from("seat_tables").delete().eq("id", id);
+  } catch {
+    /* sessizce geç */
+  }
+  revalidatePath("/admin/oturma");
+}
+
+export async function addGuest(
+  tableId: string,
+  name: string,
+): Promise<SeatGuest | null> {
+  if (!(await isAdmin())) return null;
+  const sb = getSupabaseAdmin();
+  const clean = (name ?? "").trim().slice(0, 60);
+  if (!sb || !tableId || !clean) return null;
+  try {
+    const { data, error } = await sb
+      .from("seat_guests")
+      .insert({ table_id: tableId, name: clean })
+      .select("id, name, table_id")
+      .single();
+    if (error || !data) return null;
+    revalidatePath("/admin/oturma");
+    const r = data as Record<string, unknown>;
+    return { id: String(r.id), name: clean, tableId };
+  } catch {
+    return null;
+  }
+}
+
+export async function removeGuest(id: string): Promise<void> {
+  if (!(await isAdmin())) return;
+  const sb = getSupabaseAdmin();
+  if (!sb || !id) return;
+  try {
+    await sb.from("seat_guests").delete().eq("id", id);
   } catch {
     /* sessizce geç */
   }
