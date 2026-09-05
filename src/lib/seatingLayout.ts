@@ -26,6 +26,28 @@ export type SeatGuest = {
   tableId: string | null;
 };
 
+export type SeatObject = {
+  id: string;
+  label: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+};
+
+export type SeatLine = {
+  id: string;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  color: string;
+  width: number;
+};
+
+export const LINE_COLORS = ["#6f97ad", "#a3b18a", "#d8a7a0", "#c9a96a", "#33414b"];
+export const LINE_WIDTHS = [2, 4, 8];
+
 export type View = { x: number; y: number; scale: number };
 
 export const MIN_SCALE = 0.3;

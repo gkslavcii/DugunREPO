@@ -1,16 +1,24 @@
 import Link from "next/link";
-import { getTables, getSeatEdges, getSeatStart } from "@/lib/seating";
+import {
+  getTables,
+  getSeatEdges,
+  getSeatStart,
+  getObjects,
+  getLines,
+} from "@/lib/seating";
 import { getSettings } from "@/lib/settings";
 import SeatingViewer from "@/components/SeatingViewer";
 
 export const dynamic = "force-dynamic";
 
 export default async function OturmaPublicPage() {
-  const [settings, tables, edges, start] = await Promise.all([
+  const [settings, tables, edges, start, objects, lines] = await Promise.all([
     getSettings(),
     getTables(),
     getSeatEdges(),
     getSeatStart(),
+    getObjects(),
+    getLines(),
   ]);
 
   if (!settings.seatingPublic) {
@@ -27,5 +35,13 @@ export default async function OturmaPublicPage() {
     );
   }
 
-  return <SeatingViewer tables={tables} edges={edges} start={start} />;
+  return (
+    <SeatingViewer
+      tables={tables}
+      edges={edges}
+      start={start}
+      objects={objects}
+      lines={lines}
+    />
+  );
 }

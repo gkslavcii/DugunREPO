@@ -15,6 +15,8 @@ import {
   tableSize,
   zoomAtPoint,
   type SeatEdges,
+  type SeatObject,
+  type SeatLine,
   type Table,
 } from "@/lib/seatingLayout";
 import { searchGuestTable, type SeatMatch } from "@/app/oturma/actions";
@@ -25,10 +27,14 @@ export default function SeatingViewer({
   tables,
   edges,
   start,
+  objects,
+  lines,
 }: {
   tables: Table[];
   edges: SeatEdges;
   start: { x: number; y: number } | null;
+  objects: SeatObject[];
+  lines: SeatLine[];
 }) {
   const [view, setView] = useState({ x: 0, y: 0, scale: 1 });
   const [query, setQuery] = useState("");
@@ -269,6 +275,43 @@ export default function SeatingViewer({
             transformOrigin: "0 0",
           }}
         >
+          {lines.map((l) => {
+            const cx = (l.x1 + l.x2) / 2;
+            const cy = (l.y1 + l.y2) / 2;
+            const len = Math.hypot(l.x2 - l.x1, l.y2 - l.y1);
+            const ang = (Math.atan2(l.y2 - l.y1, l.x2 - l.x1) * 180) / Math.PI;
+            return (
+              <div
+                key={l.id}
+                className="pointer-events-none absolute rounded-full"
+                style={{
+                  left: cx,
+                  top: cy,
+                  width: len,
+                  height: l.width,
+                  background: l.color,
+                  transform: `translate(-50%, -50%) rotate(${ang}deg)`,
+                }}
+              />
+            );
+          })}
+
+          {objects.map((o) => (
+            <div
+              key={o.id}
+              className="pointer-events-none absolute flex items-center justify-center rounded-lg border-2 border-dashed border-sage/60 bg-sage/15 px-1 text-center text-[11px] font-medium leading-tight text-ink"
+              style={{
+                left: o.x,
+                top: o.y,
+                width: o.w,
+                height: o.h,
+                transform: "translate(-50%, -50%)",
+              }}
+            >
+              {o.label || "Alan"}
+            </div>
+          ))}
+
           {start && highTable && (
             <svg
               className="pointer-events-none absolute left-0 top-0 overflow-visible"

@@ -113,3 +113,28 @@ alter table public.app_settings add column if not exists seat_edge_left text;
 alter table public.app_settings add column if not exists seating_public boolean not null default false;
 alter table public.app_settings add column if not exists seat_start_x double precision;
 alter table public.app_settings add column if not exists seat_start_y double precision;
+
+-- 8) Oturma planı: isimli alan/objeler (sahne, DJ, bar, pist...)
+create table if not exists public.seat_objects (
+  id         uuid primary key default gen_random_uuid(),
+  label      text not null default '',
+  x          double precision not null default 0,
+  y          double precision not null default 0,
+  w          double precision not null default 140,
+  h          double precision not null default 70,
+  created_at timestamptz not null default now()
+);
+alter table public.seat_objects enable row level security;
+
+-- 9) Oturma planı: kalemle çizilen çizgiler
+create table if not exists public.seat_lines (
+  id         uuid primary key default gen_random_uuid(),
+  x1         double precision not null,
+  y1         double precision not null,
+  x2         double precision not null,
+  y2         double precision not null,
+  color      text not null default '#6f97ad',
+  width      int  not null default 4,
+  created_at timestamptz not null default now()
+);
+alter table public.seat_lines enable row level security;

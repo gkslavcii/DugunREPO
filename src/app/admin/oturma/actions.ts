@@ -10,6 +10,8 @@ import {
   type Shape,
   type Table,
   type SeatGuest,
+  type SeatObject,
+  type SeatLine,
 } from "@/lib/seatingLayout";
 
 const clampCap = (n: number) => Math.min(20, Math.max(1, Math.round(n)));
@@ -180,6 +182,108 @@ export async function setSeatEdges(edges: {
       seat_edge_left: clean(edges.left),
       updated_at: new Date().toISOString(),
     });
+  } catch {
+    /* sessizce geç */
+  }
+  revalidatePath("/admin/oturma");
+}
+
+export async function createObject(
+  x: number,
+  y: number,
+): Promise<SeatObject | null> {
+  if (!(await isAdmin())) return null;
+  const sb = getSupabaseAdmin();
+  if (!sb) return null;
+  try {
+    const { data, error } = await sb
+      .from("seat_objects")
+      .insert({ x, y, w: 140, h: 70, label: "" })
+      .select("id, label, x, y, w, h")
+      .single();
+    if (error || !data) return null;
+    revalidatePath("/admin/oturma");
+    const r = data as Record<string, unknown>;
+    return {
+      id: String(r.id),
+      label: "",
+      x,
+      y,
+      w: 140,
+      h: 70,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function updateObject(
+  id: string,
+  fields: { label?: string; x?: number; y?: number; w?: number; h?: number },
+): Promise<void> {
+  if (!(await isAdmin())) return;
+  const sb = getSupabaseAdmin();
+  if (!sb || !id) return;
+  const patch: Record<string, unknown> = {};
+  if (typeof fields.label === "string") patch.label = fields.label.slice(0, 40);
+  if (typeof fields.x === "number") patch.x = fields.x;
+  if (typeof fields.y === "number") patch.y = fields.y;
+  if (typeof fields.w === "number") patch.w = Math.min(1000, Math.max(30, fields.w));
+  if (typeof fields.h === "number") patch.h = Math.min(1000, Math.max(30, fields.h));
+  if (Object.keys(patch).length === 0) return;
+  try {
+    await sb.from("seat_objects").update(patch).eq("id", id);
+  } catch {
+    /* sessizce geç */
+  }
+}
+
+export async function deleteObject(id: string): Promise<void> {
+  if (!(await isAdmin())) return;
+  const sb = getSupabaseAdmin();
+  if (!sb || !id) return;
+  try {
+    await sb.from("seat_objects").delete().eq("id", id);
+  } catch {
+    /* sessizce geç */
+  }
+  revalidatePath("/admin/oturma");
+}
+
+export async function createLine(
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  color: string,
+  width: number,
+): Promise<SeatLine | null> {
+  if (!(await isAdmin())) return null;
+  const sb = getSupabaseAdmin();
+  if (!sb) return null;
+  const c = /^#[0-9a-fA-F]{6}$/.test(color) ? color : "#6f97ad";
+  const wd = Math.min(20, Math.max(1, Math.round(width)));
+  try {
+    const { data, error } = await sb
+      .from("seat_lines")
+      .insert({ x1, y1, x2, y2, color: c, width: wd })
+      .select("id, x1, y1, x2, y2, color, width")
+      .single();
+    if (error || !data) return null;
+    revalidatePath("/admin/oturma");
+    const r = data as Record<string, unknown>;
+    return { id: String(r.id), x1, y1, x2, y2, color: c, width: wd };
+  } catch {
+    return null;
+  }
+}
+
+export async function deleteLine(id: string): Promise<void> {
+  if (!(await isAdmin())) return;
+  const sb = getSupabaseAdmin();
+  if (!sb || !id) return;
+  try {
+    await sb.from("seat_lines").delete().eq("id", id);
   } catch {
     /* sessizce geç */
   }

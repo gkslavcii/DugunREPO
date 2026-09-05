@@ -4,7 +4,11 @@ import {
   type Table,
   type SeatEdges,
   type SeatGuest,
+  type SeatObject,
+  type SeatLine,
 } from "./seatingLayout";
+
+const num = (v: unknown, d: number) => (typeof v === "number" ? v : d);
 
 const EMPTY_EDGES: SeatEdges = {
   top: null,
@@ -46,6 +50,49 @@ export async function getSeatGuests(): Promise<SeatGuest[]> {
       id: String(r.id),
       name: typeof r.name === "string" ? r.name : "",
       tableId: r.table_id ? String(r.table_id) : null,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function getObjects(): Promise<SeatObject[]> {
+  const sb = getSupabaseAdmin();
+  if (!sb) return [];
+  try {
+    const { data } = await sb
+      .from("seat_objects")
+      .select("id, label, x, y, w, h")
+      .order("created_at", { ascending: true });
+    return ((data as Record<string, unknown>[]) ?? []).map((r) => ({
+      id: String(r.id),
+      label: typeof r.label === "string" ? r.label : "",
+      x: num(r.x, 0),
+      y: num(r.y, 0),
+      w: num(r.w, 140),
+      h: num(r.h, 70),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function getLines(): Promise<SeatLine[]> {
+  const sb = getSupabaseAdmin();
+  if (!sb) return [];
+  try {
+    const { data } = await sb
+      .from("seat_lines")
+      .select("id, x1, y1, x2, y2, color, width")
+      .order("created_at", { ascending: true });
+    return ((data as Record<string, unknown>[]) ?? []).map((r) => ({
+      id: String(r.id),
+      x1: num(r.x1, 0),
+      y1: num(r.y1, 0),
+      x2: num(r.x2, 0),
+      y2: num(r.y2, 0),
+      color: typeof r.color === "string" ? r.color : "#6f97ad",
+      width: num(r.width, 4),
     }));
   } catch {
     return [];

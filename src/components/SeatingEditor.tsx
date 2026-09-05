@@ -14,20 +14,29 @@ import {
   fitView,
   tableSize,
   zoomAtPoint,
+  LINE_COLORS,
+  LINE_WIDTHS,
   type SeatEdges,
   type SeatGuest,
+  type SeatObject,
+  type SeatLine,
   type Shape,
   type Table,
 } from "@/lib/seatingLayout";
 import {
   addGuests,
   clearStartMark,
+  createLine,
+  createObject,
   createTable,
+  deleteLine,
+  deleteObject,
   deleteTable,
   removeGuest,
   setSeatEdges,
   setSeatingPublicAction,
   setStartMark,
+  updateObject,
   updateTable,
   updateTablePosition,
 } from "@/app/admin/oturma/actions";
@@ -55,6 +64,17 @@ type Gesture =
       oy: number;
       moved: boolean;
     }
+  | {
+      type: "objdrag";
+      id: number;
+      sx: number;
+      sy: number;
+      oid: string;
+      otx: number;
+      oty: number;
+      moved: boolean;
+    }
+  | { type: "pen"; id: number; x1: number; y1: number }
   | null;
 
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
@@ -71,17 +91,25 @@ export default function SeatingEditor({
   initialEdges,
   initialPublic,
   initialStart,
+  initialObjects,
+  initialLines,
 }: {
   initialTables: Table[];
   initialGuests: SeatGuest[];
   initialEdges: SeatEdges;
   initialPublic: boolean;
   initialStart: Pt | null;
+  initialObjects: SeatObject[];
+  initialLines: SeatLine[];
 }) {
   const [tables, setTables] = useState<Table[]>(initialTables);
   const [guests, setGuests] = useState<SeatGuest[]>(initialGuests);
+  const [objects, setObjects] = useState<SeatObject[]>(initialObjects);
+  const [lines, setLines] = useState<SeatLine[]>(initialLines);
   const [view, setView] = useState({ x: 0, y: 0, scale: 1 });
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selObj, setSelObj] = useState<string | null>(null);
+  const [selLine, setSelLine] = useState<string | null>(null);
   const [newShape, setNewShape] = useState<Shape>("round");
   const [newCap, setNewCap] = useState(8);
   const [edges, setEdges] = useState<SeatEdges>(initialEdges);
@@ -89,7 +117,21 @@ export default function SeatingEditor({
   const [pub, setPub] = useState(initialPublic);
   const [start, setStart] = useState<Pt | null>(initialStart);
   const [showEdges, setShowEdges] = useState(false);
+  const [penOn, setPenOn] = useState(false);
+  const [penColor, setPenColor] = useState(LINE_COLORS[0]);
+  const [penWidth, setPenWidth] = useState(LINE_WIDTHS[1]);
+  const [penDraft, setPenDraft] = useState<{
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
+  } | null>(null);
   const [busy, setBusy] = useState(false);
+
+  const objectsRef = useRef<SeatObject[]>(objects);
+  useEffect(() => {
+    objectsRef.current = objects;
+  }, [objects]);
 
   const startRef = useRef<Pt | null>(start);
   useEffect(() => {
@@ -172,6 +214,21 @@ export default function SeatingEditor({
     gestureRef.current = null;
   }
 
+  function toWorld(clientX: number, clientY: number): Pt {
+    const el = vpRef.current;
+    if (!el) return { x: 0, y: 0 };
+    const rect = el.getBoundingClientRect();
+    return {
+      x: (clientX - rect.left - view.x) / view.scale,
+      y: (clientY - rect.top - view.y) / view.scale,
+    };
+  }
+  function clearSel() {
+    setSelectedId(null);
+    setSelObj(null);
+    setSelLine(null);
+  }
+
   function onPointerDown(e: RPointerEvent) {
     const el = vpRef.current;
     if (!el) return;
@@ -183,7 +240,17 @@ export default function SeatingEditor({
       return;
     }
 
-    if ((e.target as HTMLElement).closest("[data-start]") && startRef.current) {
+    // kalem modu: çizgi çiz
+    if (penOn) {
+      const w = toWorld(e.clientX, e.clientY);
+      gestureRef.current = { type: "pen", id: e.pointerId, x1: w.x, y1: w.y };
+      setPenDraft({ x1: w.x, y1: w.y, x2: w.x, y2: w.y });
+      return;
+    }
+
+    const target = e.target as HTMLElement;
+
+    if (target.closest("[data-start]") && startRef.current) {
       const s = startRef.current;
       gestureRef.current = {
         type: "start",
@@ -197,9 +264,39 @@ export default function SeatingEditor({
       return;
     }
 
-    const tableEl = (e.target as HTMLElement).closest(
-      "[data-table-id]",
-    ) as HTMLElement | null;
+    const objEl = target.closest("[data-obj-id]") as HTMLElement | null;
+    const oid = objEl?.getAttribute("data-obj-id");
+    if (oid) {
+      const o = objectsRef.current.find((x) => x.id === oid);
+      if (o) {
+        gestureRef.current = {
+          type: "objdrag",
+          id: e.pointerId,
+          sx: e.clientX,
+          sy: e.clientY,
+          oid,
+          otx: o.x,
+          oty: o.y,
+          moved: false,
+        };
+        setSelectedId(null);
+        setSelLine(null);
+        setSelObj(oid);
+        return;
+      }
+    }
+
+    const lineEl = target.closest("[data-line-id]") as HTMLElement | null;
+    const lid = lineEl?.getAttribute("data-line-id");
+    if (lid) {
+      setSelectedId(null);
+      setSelObj(null);
+      setSelLine(lid);
+      gestureRef.current = null;
+      return;
+    }
+
+    const tableEl = target.closest("[data-table-id]") as HTMLElement | null;
     const tid = tableEl?.dataset.tableId;
     if (tid) {
       const t = tablesRef.current.find((x) => x.id === tid);
@@ -214,6 +311,8 @@ export default function SeatingEditor({
           oty: t.y,
           moved: false,
         };
+        setSelObj(null);
+        setSelLine(null);
         setSelectedId(tid);
         return;
       }
@@ -226,7 +325,7 @@ export default function SeatingEditor({
       ox: view.x,
       oy: view.y,
     };
-    setSelectedId(null);
+    clearSel();
   }
 
   function onPointerMove(e: RPointerEvent) {
@@ -277,6 +376,19 @@ export default function SeatingEditor({
       const dx = (e.clientX - g.sx) / view.scale;
       const dy = (e.clientY - g.sy) / view.scale;
       setStart({ x: g.ox + dx, y: g.oy + dy });
+    } else if (g.type === "objdrag") {
+      if (Math.abs(e.clientX - g.sx) + Math.abs(e.clientY - g.sy) > 3)
+        g.moved = true;
+      const dx = (e.clientX - g.sx) / view.scale;
+      const dy = (e.clientY - g.sy) / view.scale;
+      setObjects((os) =>
+        os.map((o) =>
+          o.id === g.oid ? { ...o, x: g.otx + dx, y: g.oty + dy } : o,
+        ),
+      );
+    } else if (g.type === "pen") {
+      const w = toWorld(e.clientX, e.clientY);
+      setPenDraft((d) => (d ? { ...d, x2: w.x, y2: w.y } : d));
     }
   }
 
@@ -293,6 +405,34 @@ export default function SeatingEditor({
       } else if (g.type === "start" && g.moved) {
         const s = startRef.current;
         if (s) setStartMark(Math.round(s.x), Math.round(s.y));
+      } else if (g.type === "objdrag" && g.moved) {
+        const cur = objectsRef.current.find((o) => o.id === g.oid);
+        if (cur)
+          updateObject(g.oid, { x: Math.round(cur.x), y: Math.round(cur.y) });
+      } else if (g.type === "pen") {
+        const end = toWorld(e.clientX, e.clientY);
+        setPenDraft(null);
+        if (Math.hypot(end.x - g.x1, end.y - g.y1) > 6) {
+          const tmp: SeatLine = {
+            id: `tmp-${Date.now()}`,
+            x1: g.x1,
+            y1: g.y1,
+            x2: end.x,
+            y2: end.y,
+            color: penColor,
+            width: penWidth,
+          };
+          setLines((ls) => [...ls, tmp]);
+          createLine(g.x1, g.y1, end.x, end.y, penColor, penWidth).then(
+            (created) => {
+              setLines((ls) =>
+                created
+                  ? ls.map((l) => (l.id === tmp.id ? created : l))
+                  : ls.filter((l) => l.id !== tmp.id),
+              );
+            },
+          );
+        }
       }
     }
   }
@@ -308,8 +448,59 @@ export default function SeatingEditor({
     setBusy(false);
     if (created) {
       setTables((ts) => [...ts, created]);
+      setSelObj(null);
+      setSelLine(null);
       setSelectedId(created.id);
     }
+  }
+
+  async function onAddObject() {
+    const el = vpRef.current;
+    const cx = el ? el.clientWidth / 2 : 200;
+    const cy = el ? el.clientHeight / 2 : 200;
+    const wx = Math.round((cx - view.x) / view.scale);
+    const wy = Math.round((cy - view.y) / view.scale);
+    const created = await createObject(wx, wy);
+    if (created) {
+      setObjects((os) => [...os, created]);
+      setSelectedId(null);
+      setSelLine(null);
+      setSelObj(created.id);
+    }
+  }
+
+  function patchObject(
+    fields: Partial<Pick<SeatObject, "label" | "w" | "h">>,
+  ) {
+    if (!selObj) return;
+    setObjects((os) =>
+      os.map((o) => (o.id === selObj ? { ...o, ...fields } : o)),
+    );
+    updateObject(selObj, fields);
+  }
+
+  async function onRemoveObject() {
+    if (!selObj) return;
+    const id = selObj;
+    setObjects((os) => os.filter((o) => o.id !== id));
+    setSelObj(null);
+    await deleteObject(id);
+  }
+
+  async function onRemoveLine() {
+    if (!selLine) return;
+    const id = selLine;
+    setLines((ls) => ls.filter((l) => l.id !== id));
+    setSelLine(null);
+    await deleteLine(id);
+  }
+
+  function togglePen() {
+    setPenOn((v) => {
+      const n = !v;
+      if (n) clearSel();
+      return n;
+    });
   }
 
   function patchSelected(
@@ -428,8 +619,59 @@ export default function SeatingEditor({
         >
           + Masa Ekle
         </button>
-
+        <button
+          type="button"
+          onClick={onAddObject}
+          className="rounded-full border border-line px-3 py-1.5 text-sm text-ink transition hover:bg-ink/[0.04]"
+        >
+          + Alan
+        </button>
+        <button
+          type="button"
+          onClick={togglePen}
+          className={`rounded-full px-3 py-1.5 text-sm transition ${
+            penOn
+              ? "bg-dusk-deep text-white"
+              : "border border-line text-ink hover:bg-ink/[0.04]"
+          }`}
+        >
+          ✏️ Çizgi
+        </button>
       </div>
+
+      {/* kalem stili (çizgi modu açıkken) */}
+      {penOn && (
+        <div className="absolute left-2 top-[4.75rem] z-10 flex flex-wrap items-center gap-2 rounded-2xl border border-line bg-white/90 p-2 shadow-lg backdrop-blur-sm">
+          <span className="text-xs text-ink-soft">Renk</span>
+          {LINE_COLORS.map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => setPenColor(c)}
+              aria-label={c}
+              className={`h-6 w-6 rounded-full border-2 transition ${
+                penColor === c ? "border-ink" : "border-white"
+              }`}
+              style={{ background: c }}
+            />
+          ))}
+          <span className="ml-1 text-xs text-ink-soft">Kalınlık</span>
+          {LINE_WIDTHS.map((wd, i) => (
+            <button
+              key={wd}
+              type="button"
+              onClick={() => setPenWidth(wd)}
+              className={`flex h-7 items-center rounded-full px-3 text-xs transition ${
+                penWidth === wd
+                  ? "bg-dusk-deep text-white"
+                  : "border border-line text-ink hover:bg-ink/[0.04]"
+              }`}
+            >
+              {["İnce", "Orta", "Kalın"][i]}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* sağ üst: aç/kapat + giriş + yönler + yazdır */}
       <div className="absolute right-2 top-2 z-10 flex max-w-[calc(100%-1rem)] flex-wrap items-center justify-end gap-2 rounded-2xl border border-line bg-white/85 p-2 shadow-lg backdrop-blur-sm">
@@ -552,6 +794,63 @@ export default function SeatingEditor({
             transformOrigin: "0 0",
           }}
         >
+          {lines.map((l) => {
+            const cx = (l.x1 + l.x2) / 2;
+            const cy = (l.y1 + l.y2) / 2;
+            const len = Math.hypot(l.x2 - l.x1, l.y2 - l.y1);
+            const ang = (Math.atan2(l.y2 - l.y1, l.x2 - l.x1) * 180) / Math.PI;
+            return (
+              <div
+                key={l.id}
+                data-line-id={l.id}
+                className="absolute cursor-pointer"
+                style={{
+                  left: cx,
+                  top: cy,
+                  width: len,
+                  height: Math.max(l.width, 16),
+                  transform: `translate(-50%, -50%) rotate(${ang}deg)`,
+                }}
+              >
+                <div
+                  className="absolute left-0 top-1/2 w-full -translate-y-1/2 rounded-full"
+                  style={{
+                    height: l.width,
+                    background: l.color,
+                    outline: selLine === l.id ? "2px solid #6f97ad" : "none",
+                    outlineOffset: 2,
+                  }}
+                />
+              </div>
+            );
+          })}
+
+          {objects.map((o) => (
+            <div
+              key={o.id}
+              data-obj-id={o.id}
+              className="absolute cursor-grab active:cursor-grabbing"
+              style={{ left: o.x, top: o.y, width: 0, height: 0 }}
+            >
+              <div
+                className={`absolute flex items-center justify-center rounded-lg border-2 border-dashed bg-sage/15 px-1 text-center text-[11px] font-medium leading-tight text-ink ${
+                  selObj === o.id
+                    ? "border-dusk-deep ring-2 ring-dusk/40"
+                    : "border-sage/60"
+                }`}
+                style={{
+                  left: 0,
+                  top: 0,
+                  width: o.w,
+                  height: o.h,
+                  transform: "translate(-50%, -50%)",
+                }}
+              >
+                {o.label || "Alan"}
+              </div>
+            </div>
+          ))}
+
           {tables.map((t) => {
             const { w, h } = tableSize(t.shape, t.capacity);
             const chairs = chairPositions(t.shape, t.capacity);
@@ -625,6 +924,36 @@ export default function SeatingEditor({
               </div>
             </div>
           )}
+
+          {penDraft &&
+            (() => {
+              const cx = (penDraft.x1 + penDraft.x2) / 2;
+              const cy = (penDraft.y1 + penDraft.y2) / 2;
+              const len = Math.hypot(
+                penDraft.x2 - penDraft.x1,
+                penDraft.y2 - penDraft.y1,
+              );
+              const ang =
+                (Math.atan2(
+                  penDraft.y2 - penDraft.y1,
+                  penDraft.x2 - penDraft.x1,
+                ) *
+                  180) /
+                Math.PI;
+              return (
+                <div
+                  className="pointer-events-none absolute rounded-full opacity-70"
+                  style={{
+                    left: cx,
+                    top: cy,
+                    width: len,
+                    height: penWidth,
+                    background: penColor,
+                    transform: `translate(-50%, -50%) rotate(${ang}deg)`,
+                  }}
+                />
+              );
+            })()}
         </div>
 
         {edges.top && (
@@ -751,6 +1080,73 @@ export default function SeatingEditor({
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* seçili alan (obje) paneli */}
+      {selObj &&
+        (() => {
+          const o = objects.find((x) => x.id === selObj);
+          if (!o) return null;
+          return (
+            <div className="absolute inset-x-2 bottom-2 z-10 mx-auto flex max-w-xl flex-wrap items-center gap-3 rounded-2xl border border-line bg-white/90 p-3 shadow-lg backdrop-blur-sm">
+              <input
+                value={o.label}
+                onChange={(e) => patchObject({ label: e.target.value })}
+                placeholder="Alan adı (ör. Sahne, Bar, DJ)"
+                maxLength={40}
+                className="w-44 rounded-full border border-line bg-white px-3 py-1.5 text-sm text-ink outline-none focus:border-dusk-deep"
+              />
+              <label className="flex items-center gap-1.5 text-xs text-ink-soft">
+                En
+                <input
+                  type="number"
+                  min={30}
+                  max={800}
+                  step={10}
+                  value={Math.round(o.w)}
+                  onChange={(e) =>
+                    patchObject({ w: clamp(Number(e.target.value) || 30, 30, 800) })
+                  }
+                  className="w-20 rounded-full border border-line bg-white px-3 py-1.5 text-sm text-ink outline-none focus:border-dusk-deep"
+                />
+              </label>
+              <label className="flex items-center gap-1.5 text-xs text-ink-soft">
+                Boy
+                <input
+                  type="number"
+                  min={30}
+                  max={800}
+                  step={10}
+                  value={Math.round(o.h)}
+                  onChange={(e) =>
+                    patchObject({ h: clamp(Number(e.target.value) || 30, 30, 800) })
+                  }
+                  className="w-20 rounded-full border border-line bg-white px-3 py-1.5 text-sm text-ink outline-none focus:border-dusk-deep"
+                />
+              </label>
+              <button
+                type="button"
+                onClick={onRemoveObject}
+                className="ml-auto rounded-full border border-[#b56a60]/40 px-4 py-1.5 text-sm text-[#b56a60] transition hover:bg-[#b56a60]/10"
+              >
+                Alanı sil
+              </button>
+            </div>
+          );
+        })()}
+
+      {/* seçili çizgi paneli */}
+      {selLine && (
+        <div className="absolute inset-x-2 bottom-2 z-10 mx-auto flex max-w-xl items-center gap-3 rounded-2xl border border-line bg-white/90 p-3 shadow-lg backdrop-blur-sm">
+          <span className="text-sm text-ink">Çizgi seçildi</span>
+          <button
+            type="button"
+            onClick={onRemoveLine}
+            className="ml-auto rounded-full border border-[#b56a60]/40 px-4 py-1.5 text-sm text-[#b56a60] transition hover:bg-[#b56a60]/10"
+          >
+            Çizgiyi sil
+          </button>
         </div>
       )}
     </div>
