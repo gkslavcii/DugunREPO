@@ -184,12 +184,24 @@ export default function SeatingViewer({
     if (panRef.current?.id === e.pointerId) panRef.current = null;
   }
 
+  function zoomButton(factor: number) {
+    const el = vpRef.current;
+    if (!el) return;
+    setView((v) =>
+      zoomAtPoint(v, el.clientWidth / 2, el.clientHeight / 2, factor),
+    );
+  }
+  function doFit() {
+    const el = vpRef.current;
+    if (el) setView(fitView(tables, el.clientWidth, el.clientHeight));
+  }
+
   const gridPx = 26 * view.scale;
 
   return (
-    <div className="flex h-dvh flex-col bg-ivory">
-      {/* üst şerit */}
-      <div className="flex flex-col gap-2 border-b border-line bg-white/70 px-4 py-3 backdrop-blur-sm">
+    <div className="relative h-dvh w-full overflow-hidden bg-ivory">
+      {/* üst şerit (yüzen) */}
+      <div className="absolute inset-x-2 top-2 z-10 mx-auto flex max-w-xl flex-col gap-2 rounded-2xl border border-line bg-white/90 px-4 py-3 shadow-lg backdrop-blur-sm">
         <div className="flex items-center gap-3">
           <Link
             href="/"
@@ -242,7 +254,7 @@ export default function SeatingViewer({
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
-        className="relative flex-1 touch-none select-none overflow-hidden bg-cream/40"
+        className="absolute inset-0 z-0 touch-none select-none overflow-hidden bg-cream/40"
         style={{
           backgroundImage:
             "radial-gradient(circle, rgba(51,65,75,0.10) 1px, transparent 1px)",
@@ -382,6 +394,33 @@ export default function SeatingViewer({
             Oturma planı henüz hazırlanmadı.
           </div>
         )}
+      </div>
+
+      {/* sağ alt: zoom */}
+      <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1 rounded-2xl border border-line bg-white/85 p-1.5 shadow-lg backdrop-blur-sm">
+        <button
+          type="button"
+          onClick={doFit}
+          className="rounded-full border border-line px-3 py-1.5 text-xs text-ink transition hover:bg-ink/[0.04]"
+        >
+          Tümü
+        </button>
+        <button
+          type="button"
+          onClick={() => zoomButton(1 / 1.2)}
+          className="h-8 w-8 rounded-full border border-line text-lg leading-none text-ink transition hover:bg-ink/[0.04]"
+          aria-label="Uzaklaştır"
+        >
+          −
+        </button>
+        <button
+          type="button"
+          onClick={() => zoomButton(1.2)}
+          className="h-8 w-8 rounded-full border border-line text-lg leading-none text-ink transition hover:bg-ink/[0.04]"
+          aria-label="Yakınlaştır"
+        >
+          +
+        </button>
       </div>
     </div>
   );

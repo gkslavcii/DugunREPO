@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   useCallback,
   useEffect,
@@ -87,6 +88,7 @@ export default function SeatingEditor({
   const [guestName, setGuestName] = useState("");
   const [pub, setPub] = useState(initialPublic);
   const [start, setStart] = useState<Pt | null>(initialStart);
+  const [showEdges, setShowEdges] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const startRef = useRef<Pt | null>(start);
@@ -382,9 +384,15 @@ export default function SeatingEditor({
   const gridPx = 26 * view.scale;
 
   return (
-    <div className="flex flex-col gap-3">
-      {/* araç çubuğu */}
-      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-line bg-white/60 p-3">
+    <div className="fixed inset-0 z-30 overflow-hidden bg-cream/40">
+      {/* araç çubuğu (sol üst, yüzen) */}
+      <div className="absolute left-2 top-2 z-10 flex max-w-[calc(100%-1rem)] flex-wrap items-center gap-2 rounded-2xl border border-line bg-white/85 p-2 shadow-lg backdrop-blur-sm">
+        <Link
+          href="/admin"
+          className="rounded-full border border-ink/15 px-3 py-1.5 text-xs text-ink-soft transition hover:bg-ink/[0.04]"
+        >
+          ← Panel
+        </Link>
         <div className="flex overflow-hidden rounded-full border border-line">
           {(Object.keys(SHAPE_LABEL) as Shape[]).map((s) => (
             <button
@@ -421,35 +429,10 @@ export default function SeatingEditor({
           + Masa Ekle
         </button>
 
-        <div className="ml-auto flex items-center gap-1">
-          <button
-            type="button"
-            onClick={doFit}
-            className="rounded-full border border-line px-3 py-1.5 text-xs text-ink transition hover:bg-ink/[0.04]"
-          >
-            Sığdır
-          </button>
-          <button
-            type="button"
-            onClick={() => zoomButton(1 / 1.2)}
-            className="h-8 w-8 rounded-full border border-line text-lg leading-none text-ink transition hover:bg-ink/[0.04]"
-            aria-label="Uzaklaştır"
-          >
-            −
-          </button>
-          <button
-            type="button"
-            onClick={() => zoomButton(1.2)}
-            className="h-8 w-8 rounded-full border border-line text-lg leading-none text-ink transition hover:bg-ink/[0.04]"
-            aria-label="Yakınlaştır"
-          >
-            +
-          </button>
-        </div>
       </div>
 
-      {/* misafirlere aç/kapat + giriş noktası */}
-      <div className="flex flex-wrap items-center gap-2">
+      {/* sağ üst: aç/kapat + giriş + yönler + yazdır */}
+      <div className="absolute right-2 top-2 z-10 flex max-w-[calc(100%-1rem)] flex-wrap items-center justify-end gap-2 rounded-2xl border border-line bg-white/85 p-2 shadow-lg backdrop-blur-sm">
         <button
           type="button"
           onClick={togglePublic}
@@ -465,23 +448,68 @@ export default function SeatingEditor({
           <button
             type="button"
             onClick={removeStart}
-            className="rounded-full border border-line px-4 py-1.5 text-xs text-ink-soft transition hover:bg-ink/[0.04]"
+            className="rounded-full border border-line px-3 py-1.5 text-xs text-ink-soft transition hover:bg-ink/[0.04]"
           >
-            🚪 Giriş noktasını kaldır
+            🚪 Giriş kaldır
           </button>
         ) : (
           <button
             type="button"
             onClick={placeStart}
-            className="rounded-full border border-line px-4 py-1.5 text-xs text-ink transition hover:bg-ink/[0.04]"
+            className="rounded-full border border-line px-3 py-1.5 text-xs text-ink transition hover:bg-ink/[0.04]"
           >
-            🚪 Giriş noktası koy
+            🚪 Giriş koy
           </button>
         )}
+        <button
+          type="button"
+          onClick={() => setShowEdges((v) => !v)}
+          className={`rounded-full px-3 py-1.5 text-xs transition ${
+            showEdges
+              ? "bg-dusk-deep text-white"
+              : "border border-line text-ink hover:bg-ink/[0.04]"
+          }`}
+        >
+          Yönler
+        </button>
+        <Link
+          href="/admin/oturma/yazdir"
+          className="rounded-full border border-line px-3 py-1.5 text-xs text-ink transition hover:bg-ink/[0.04]"
+        >
+          Yazdır
+        </Link>
       </div>
 
-      {/* kenar yön etiketleri */}
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      {/* sağ alt: zoom + sığdır */}
+      <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1 rounded-2xl border border-line bg-white/85 p-1.5 shadow-lg backdrop-blur-sm">
+        <button
+          type="button"
+          onClick={doFit}
+          className="rounded-full border border-line px-3 py-1.5 text-xs text-ink transition hover:bg-ink/[0.04]"
+        >
+          Sığdır
+        </button>
+        <button
+          type="button"
+          onClick={() => zoomButton(1 / 1.2)}
+          className="h-8 w-8 rounded-full border border-line text-lg leading-none text-ink transition hover:bg-ink/[0.04]"
+          aria-label="Uzaklaştır"
+        >
+          −
+        </button>
+        <button
+          type="button"
+          onClick={() => zoomButton(1.2)}
+          className="h-8 w-8 rounded-full border border-line text-lg leading-none text-ink transition hover:bg-ink/[0.04]"
+          aria-label="Yakınlaştır"
+        >
+          +
+        </button>
+      </div>
+
+      {/* kenar yön etiketleri (Yönler ile açılır) */}
+      {showEdges && (
+      <div className="absolute right-2 top-[4.75rem] z-10 grid w-[min(92vw,24rem)] grid-cols-2 gap-2 rounded-2xl border border-line bg-white/85 p-2 shadow-lg backdrop-blur-sm sm:grid-cols-4">
         {(
           [
             ["top", "Üst yön"],
@@ -500,15 +528,16 @@ export default function SeatingEditor({
           />
         ))}
       </div>
+      )}
 
-      {/* tuval */}
+      {/* tuval (tam ekran arka plan) */}
       <div
         ref={vpRef}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
-        className="relative h-[62vh] w-full touch-none select-none overflow-hidden rounded-2xl border border-line bg-cream/40"
+        className="absolute inset-0 z-0 touch-none select-none overflow-hidden bg-cream/40"
         style={{
           backgroundImage:
             "radial-gradient(circle, rgba(51,65,75,0.10) 1px, transparent 1px)",
@@ -628,9 +657,9 @@ export default function SeatingEditor({
         )}
       </div>
 
-      {/* seçili masa paneli */}
+      {/* seçili masa paneli (alt-orta, yüzen) */}
       {selected && (
-        <div className="flex flex-col gap-3 rounded-2xl border border-line bg-white/60 p-3">
+        <div className="absolute inset-x-2 bottom-2 z-10 mx-auto flex max-h-[46vh] max-w-2xl flex-col gap-3 overflow-y-auto rounded-2xl border border-line bg-white/90 p-3 shadow-lg backdrop-blur-sm">
           <div className="flex flex-wrap items-center gap-3">
             <input
               value={selected.name}

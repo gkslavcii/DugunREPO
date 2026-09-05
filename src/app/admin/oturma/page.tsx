@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { isAdmin } from "@/lib/auth";
 import {
@@ -8,9 +7,7 @@ import {
   getSeatStart,
 } from "@/lib/seating";
 import { getSettings } from "@/lib/settings";
-import AdminTabs from "@/components/AdminTabs";
 import SeatingEditor from "@/components/SeatingEditor";
-import { logoutAction } from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -25,45 +22,12 @@ export default async function OturmaPage() {
   ]);
 
   return (
-    <main className="mx-auto min-h-dvh w-full max-w-4xl px-4 py-10 sm:px-6">
-      <div className="mb-8 flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-ink-soft">
-            Yönetim
-          </p>
-          <h1 className="font-display text-4xl text-ink">Oturma Planı</h1>
-        </div>
-        <form action={logoutAction}>
-          <button className="rounded-full border border-ink/15 px-4 py-2 text-xs text-ink-soft transition hover:bg-ink/[0.04]">
-            Çıkış
-          </button>
-        </form>
-      </div>
-
-      <AdminTabs active="oturma" />
-
-      <SeatingEditor
-        initialTables={tables}
-        initialGuests={guests}
-        initialEdges={edges}
-        initialPublic={settings.seatingPublic}
-        initialStart={start}
-      />
-
-      <div className="mt-6 flex items-center gap-4">
-        <Link
-          href="/admin/oturma/yazdir"
-          className="rounded-full border border-ink/15 px-4 py-2 text-sm text-ink transition hover:bg-ink/[0.04]"
-        >
-          📄 Listeyi yazdır
-        </Link>
-        <Link
-          href="/"
-          className="text-sm text-ink-soft underline-offset-4 transition hover:text-ink hover:underline"
-        >
-          ← Ana sayfa
-        </Link>
-      </div>
-    </main>
+    <SeatingEditor
+      initialTables={tables}
+      initialGuests={guests}
+      initialEdges={edges}
+      initialPublic={settings.seatingPublic}
+      initialStart={start}
+    />
   );
 }
