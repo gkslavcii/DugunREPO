@@ -1,4 +1,3 @@
-import sharp from "sharp";
 import { getObject } from "@/lib/r2";
 
 export const runtime = "nodejs";
@@ -33,6 +32,8 @@ export async function GET(
   const w = Number(new URL(req.url).searchParams.get("w"));
   if (w > 0 && w <= 2000) {
     try {
+      // sharp'ı yalnızca gerektiğinde yükle; yüklenemezse/başarısızsa orijinali ver
+      const sharp = (await import("sharp")).default;
       body = await sharp(original)
         .rotate() // EXIF yönünü düzelt (telefon fotoğrafları için)
         .resize({ width: w, withoutEnlargement: true })
@@ -40,7 +41,8 @@ export async function GET(
         .toBuffer();
       contentType = "image/webp";
     } catch {
-      body = original; // HEIC vb. küçültülemezse orijinali ver
+      body = original; // sharp yoksa/HEIC vb. küçültülemezse orijinali ver
+      contentType = obj.ContentType ?? "image/jpeg";
     }
   }
 

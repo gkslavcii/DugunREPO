@@ -1,4 +1,3 @@
-import sharp from "sharp";
 import { getObject } from "@/lib/r2";
 import { getSettings } from "@/lib/settings";
 
@@ -16,19 +15,30 @@ export async function GET(req: Request) {
       const obj = await getObject(backgroundKey);
       if (obj?.Body) {
         const src = Buffer.from(await obj.Body.transformToByteArray());
-        const out = await sharp(src)
-          .resize(1200, 630, {
-            fit: "cover",
-            position: sharp.strategy.attention,
-          })
-          .jpeg({ quality: 85 })
-          .toBuffer();
-        return new Response(new Uint8Array(out), {
-          headers: {
-            "Content-Type": "image/jpeg",
-            "Cache-Control": "public, max-age=86400",
-          },
-        });
+        try {
+          const sharp = (await import("sharp")).default;
+          const out = await sharp(src)
+            .resize(1200, 630, {
+              fit: "cover",
+              position: sharp.strategy.attention,
+            })
+            .jpeg({ quality: 85 })
+            .toBuffer();
+          return new Response(new Uint8Array(out), {
+            headers: {
+              "Content-Type": "image/jpeg",
+              "Cache-Control": "public, max-age=86400",
+            },
+          });
+        } catch {
+          // sharp yoksa: kırpmadan kaynak görseli döndür
+          return new Response(new Uint8Array(src), {
+            headers: {
+              "Content-Type": obj.ContentType ?? "image/jpeg",
+              "Cache-Control": "public, max-age=86400",
+            },
+          });
+        }
       }
     }
   } catch {
