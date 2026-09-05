@@ -228,8 +228,8 @@ export async function updateObject(
   if (typeof fields.label === "string") patch.label = fields.label.slice(0, 40);
   if (typeof fields.x === "number") patch.x = fields.x;
   if (typeof fields.y === "number") patch.y = fields.y;
-  if (typeof fields.w === "number") patch.w = Math.min(1000, Math.max(30, fields.w));
-  if (typeof fields.h === "number") patch.h = Math.min(1000, Math.max(30, fields.h));
+  if (typeof fields.w === "number") patch.w = Math.max(20, fields.w);
+  if (typeof fields.h === "number") patch.h = Math.max(20, fields.h);
   if (Object.keys(patch).length === 0) return;
   try {
     await sb.from("seat_objects").update(patch).eq("id", id);

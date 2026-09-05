@@ -74,6 +74,18 @@ type Gesture =
       oty: number;
       moved: boolean;
     }
+  | {
+      type: "resize";
+      id: number;
+      sx: number;
+      sy: number;
+      oid: string;
+      ox: number;
+      oy: number;
+      ow: number;
+      oh: number;
+      handle: string;
+    }
   | { type: "pen"; id: number; x1: number; y1: number }
   | null;
 
@@ -264,6 +276,29 @@ export default function SeatingEditor({
       return;
     }
 
+    const rz = target.closest("[data-resize]") as HTMLElement | null;
+    if (rz) {
+      const handle = rz.getAttribute("data-resize") ?? "";
+      const wrap = rz.closest("[data-obj-id]") as HTMLElement | null;
+      const roid = wrap?.getAttribute("data-obj-id");
+      const o = roid ? objectsRef.current.find((x) => x.id === roid) : null;
+      if (o && handle) {
+        gestureRef.current = {
+          type: "resize",
+          id: e.pointerId,
+          sx: e.clientX,
+          sy: e.clientY,
+          oid: o.id,
+          ox: o.x,
+          oy: o.y,
+          ow: o.w,
+          oh: o.h,
+          handle,
+        };
+        return;
+      }
+    }
+
     const objEl = target.closest("[data-obj-id]") as HTMLElement | null;
     const oid = objEl?.getAttribute("data-obj-id");
     if (oid) {
@@ -386,6 +421,39 @@ export default function SeatingEditor({
           o.id === g.oid ? { ...o, x: g.otx + dx, y: g.oty + dy } : o,
         ),
       );
+    } else if (g.type === "resize") {
+      const dx = (e.clientX - g.sx) / view.scale;
+      const dy = (e.clientY - g.sy) / view.scale;
+      const min = 30;
+      const oLeft = g.ox - g.ow / 2;
+      const oRight = g.ox + g.ow / 2;
+      const oTop = g.oy - g.oh / 2;
+      const oBottom = g.oy + g.oh / 2;
+      let nw = g.ow;
+      let nh = g.oh;
+      let nx = g.ox;
+      let ny = g.oy;
+      if (g.handle.includes("e")) {
+        nw = Math.max(min, g.ow + dx);
+        nx = oLeft + nw / 2;
+      }
+      if (g.handle.includes("w")) {
+        nw = Math.max(min, g.ow - dx);
+        nx = oRight - nw / 2;
+      }
+      if (g.handle.includes("s")) {
+        nh = Math.max(min, g.oh + dy);
+        ny = oTop + nh / 2;
+      }
+      if (g.handle.includes("n")) {
+        nh = Math.max(min, g.oh - dy);
+        ny = oBottom - nh / 2;
+      }
+      setObjects((os) =>
+        os.map((o) =>
+          o.id === g.oid ? { ...o, x: nx, y: ny, w: nw, h: nh } : o,
+        ),
+      );
     } else if (g.type === "pen") {
       const w = toWorld(e.clientX, e.clientY);
       setPenDraft((d) => (d ? { ...d, x2: w.x, y2: w.y } : d));
@@ -409,6 +477,15 @@ export default function SeatingEditor({
         const cur = objectsRef.current.find((o) => o.id === g.oid);
         if (cur)
           updateObject(g.oid, { x: Math.round(cur.x), y: Math.round(cur.y) });
+      } else if (g.type === "resize") {
+        const cur = objectsRef.current.find((o) => o.id === g.oid);
+        if (cur)
+          updateObject(g.oid, {
+            x: Math.round(cur.x),
+            y: Math.round(cur.y),
+            w: Math.round(cur.w),
+            h: Math.round(cur.h),
+          });
       } else if (g.type === "pen") {
         const end = toWorld(e.clientX, e.clientY);
         setPenDraft(null);
@@ -825,31 +902,60 @@ export default function SeatingEditor({
             );
           })}
 
-          {objects.map((o) => (
-            <div
-              key={o.id}
-              data-obj-id={o.id}
-              className="absolute cursor-grab active:cursor-grabbing"
-              style={{ left: o.x, top: o.y, width: 0, height: 0 }}
-            >
+          {objects.map((o) => {
+            const hw = o.w / 2;
+            const hh = o.h / 2;
+            const hs = 16 / view.scale;
+            const isSel = selObj === o.id;
+            const handles: [string, number, number, string][] = [
+              ["nw", -hw, -hh, "cursor-nwse-resize"],
+              ["n", 0, -hh, "cursor-ns-resize"],
+              ["ne", hw, -hh, "cursor-nesw-resize"],
+              ["e", hw, 0, "cursor-ew-resize"],
+              ["se", hw, hh, "cursor-nwse-resize"],
+              ["s", 0, hh, "cursor-ns-resize"],
+              ["sw", -hw, hh, "cursor-nesw-resize"],
+              ["w", -hw, 0, "cursor-ew-resize"],
+            ];
+            return (
               <div
-                className={`absolute flex items-center justify-center rounded-lg border-2 border-dashed bg-sage/15 px-1 text-center text-[11px] font-medium leading-tight text-ink ${
-                  selObj === o.id
-                    ? "border-dusk-deep ring-2 ring-dusk/40"
-                    : "border-sage/60"
-                }`}
-                style={{
-                  left: 0,
-                  top: 0,
-                  width: o.w,
-                  height: o.h,
-                  transform: "translate(-50%, -50%)",
-                }}
+                key={o.id}
+                data-obj-id={o.id}
+                className="absolute cursor-grab active:cursor-grabbing"
+                style={{ left: o.x, top: o.y, width: 0, height: 0 }}
               >
-                {o.label || "Alan"}
+                <div
+                  className={`absolute flex items-center justify-center rounded-lg border-2 border-dashed bg-sage/15 px-1 text-center text-[11px] font-medium leading-tight text-ink ${
+                    isSel ? "border-dusk-deep" : "border-sage/60"
+                  }`}
+                  style={{
+                    left: 0,
+                    top: 0,
+                    width: o.w,
+                    height: o.h,
+                    transform: "translate(-50%, -50%)",
+                  }}
+                >
+                  {o.label || "Alan"}
+                </div>
+                {isSel &&
+                  handles.map(([hName, hx, hy, cur]) => (
+                    <div
+                      key={hName}
+                      data-resize={hName}
+                      className={`absolute rounded-sm border border-dusk-deep bg-white shadow-sm ${cur}`}
+                      style={{
+                        left: hx,
+                        top: hy,
+                        width: hs,
+                        height: hs,
+                        transform: "translate(-50%, -50%)",
+                      }}
+                    />
+                  ))}
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           {tables.map((t) => {
             const { w, h } = tableSize(t.shape, t.capacity);
@@ -1101,12 +1207,11 @@ export default function SeatingEditor({
                 En
                 <input
                   type="number"
-                  min={30}
-                  max={800}
+                  min={20}
                   step={10}
                   value={Math.round(o.w)}
                   onChange={(e) =>
-                    patchObject({ w: clamp(Number(e.target.value) || 30, 30, 800) })
+                    patchObject({ w: Math.max(20, Number(e.target.value) || 20) })
                   }
                   className="w-20 rounded-full border border-line bg-white px-3 py-1.5 text-sm text-ink outline-none focus:border-dusk-deep"
                 />
@@ -1115,12 +1220,11 @@ export default function SeatingEditor({
                 Boy
                 <input
                   type="number"
-                  min={30}
-                  max={800}
+                  min={20}
                   step={10}
                   value={Math.round(o.h)}
                   onChange={(e) =>
-                    patchObject({ h: clamp(Number(e.target.value) || 30, 30, 800) })
+                    patchObject({ h: Math.max(20, Number(e.target.value) || 20) })
                   }
                   className="w-20 rounded-full border border-line bg-white px-3 py-1.5 text-sm text-ink outline-none focus:border-dusk-deep"
                 />
